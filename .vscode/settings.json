@@ -1,12 +1,4 @@
 {
     "editor.formatOnSave": true,
     "C_Cpp.clang_format_fallbackStyle": "WebKit",
-    "files.associations": {
-        "*.html": "html",
-        "*.css": "css",
-        "cuchar": "cpp",
-        "stdio.h": "c",
-        "hash_table.h": "c",
-        "cache_table.h": "c"
-    }
 }
