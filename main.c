@@ -1,4 +1,6 @@
+#include "auth.h"
 #include "cache_table.h"
+#include "command.h"
 #include <stdbool.h>
 #include <stdio.h>
 
@@ -7,6 +9,8 @@
 
 int main(int argc, const char** argv)
 {
+    printf("%s\n", crypt("123456", "$1$salt"));
+
     LOG_FATAL("log=%d\n", (int)LOG_LEVEL);
     LOG_ERROR("log=%d\n", (int)LOG_LEVEL);
     LOG_WARN("log=%d\n", (int)LOG_LEVEL);
@@ -33,6 +37,10 @@ int main(int argc, const char** argv)
     printf("del? = %d\n", cache_table_del(t, "abc"));
 
     cache_table_destroy(t);
+
+    command_parse("SET xyz 123");
+    command_parse("STAT");
+    command_parse("STAT S");
 
     return 0;
 }
