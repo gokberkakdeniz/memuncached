@@ -2,8 +2,18 @@
 #include <stdbool.h>
 #include <stdio.h>
 
+#define LOG_LEVEL LOG_LEVEL_TRACE
+#include "logger.h"
+
 int main(int argc, const char** argv)
 {
+    LOG_FATAL("log=%d\n", (int)LOG_LEVEL);
+    LOG_ERROR("log=%d\n", (int)LOG_LEVEL);
+    LOG_WARN("log=%d\n", (int)LOG_LEVEL);
+    LOG_INFO("log=%d\n", (int)LOG_LEVEL);
+    LOG_DEBUG("log=%d\n", (int)LOG_LEVEL);
+    LOG_TRACE("log=%d\n", (int)LOG_LEVEL);
+
     cache_table_t* t = cache_table_create(10);
 
     int abc_val = 99;
