@@ -1,6 +1,7 @@
 #ifndef H_LOGGER
 #define H_LOGGER
 
+#include <stdio.h>
 #include <time.h>
 
 #define LOG_LEVEL_FATAL 0
