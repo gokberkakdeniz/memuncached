@@ -15,7 +15,7 @@ _memuncached_ is the worst undistributed memory object caching system.
 - [ ] set(string $key, mixed $value, int $expiration = ?): bool
 
 | Command | Arguments              | Returns | Description                           |
-| ------- | ---------------------- | ------- |
+| ------- | ---------------------- | ------- | ------------------------------------- |
 | STAT    | -                      |         | Server key count, memory usage etc... |
 | VERSION | -                      |         | Server version, key count etc...      |
 | HELP    | -                      |         |                                       |
@@ -25,7 +25,7 @@ _memuncached_ is the worst undistributed memory object caching system.
 | INC     | KEY [OFFSET] [INITIAL] |         |                                       |
 | DEC     | KEY [OFFSET] [INITIAL] |         |                                       |
 | DEL     | KEY                    |         |                                       |
-| BYE     |                        |         |                                       |
+| BYE     | -                      |         |                                       |
 
 ## Nice To Do - Level 1
 
