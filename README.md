@@ -42,19 +42,19 @@ Invalid command.
 ## Commands
 
 
-| Command | Arguments              | Example Responses                                             | Description                           |
-| ------- | ---------------------- | ------------------------------------------------------------- | ------------------------------------- |
-| ADD     | KEY VALUE              |                                                               |                                       |
-| APP     | KEY VALUE              |                                                               |                                       |
-| BYE     | -                      | ```200 OK```<br/>```bye.```                                   |                                       |
-| DEC     | KEY [OFFSET] [INITIAL] |                                                               |                                       |
-| DEL     | KEY                    |                                                               |                                       |
-| INC     | KEY [OFFSET] [INITIAL] |                                                               |                                       |
-| GET     | KEY                    |                                                               |                                       |
-| PRE     | KEY VALUE              |                                                               |                                       |
-| SET     | KEY VALUE              |                                                               |                                       |
-| STT     | -                      | ```200 OK```<br/>```client_count: 1```<br/>```key_count: 0``` | Server key count, memory usage etc... |
-| VER     | -                      | ```200 OK```<br/>```1.0```                                    | Server version, key count etc...      |
+| Command | Arguments              | Example Responses                                       | Description                           |
+| ------- | ---------------------- | ------------------------------------------------------- | ------------------------------------- |
+| ADD     | KEY VALUE              |                                                         |                                       |
+| APP     | KEY VALUE              |                                                         |                                       |
+| BYE     | -                      | <code>200 OK<br/>bye.<code>                             |                                       |
+| DEC     | KEY [OFFSET] [INITIAL] |                                                         |                                       |
+| DEL     | KEY                    |                                                         |                                       |
+| INC     | KEY [OFFSET] [INITIAL] |                                                         |                                       |
+| GET     | KEY                    |                                                         |                                       |
+| PRE     | KEY VALUE              |                                                         |                                       |
+| SET     | KEY VALUE              |                                                         |                                       |
+| STT     | -                      | <code>200 OK<br/>client_count: 1<br/>key_count: 0<code> | Server key count, memory usage etc... |
+| VER     | -                      | <code>200 OK<br/>1.0<code>                              | Server version, key count etc...      |
 
 
 
