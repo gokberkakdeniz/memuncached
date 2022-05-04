@@ -1,6 +1,20 @@
 #ifndef H_COMPILER
 #define H_COMPILER
 
+#include <stdbool.h>
+#include <string.h>
+
+/**
+ * @brief is server loop running?
+ */
+extern volatile bool is_running;
+
+#define LISTEN_BACKLOG 5
+#define MEMUNCACHED_VERSION "1.0"
+#define STRINGIFY(A) #A
+
+#define MEMUNCACHED_HEADER "Memuncached v" MEMUNCACHED_VERSION " (" MEMUNCACHED_COMPILER " on " MEMUNCACHED_OS ")"
+
 #if defined(__clang__)
 #define MEMUNCACHED_COMPILER "clang"
 #elif defined(__INTEL_COMPILER)
@@ -26,11 +40,5 @@
 #else
 #define MEMUNCACHED_OS "unknown"
 #endif
-
-#define MEMUNCACHED_HEADER "Memuncached v" MEMUNCACHED_VERSION " (" MEMUNCACHED_COMPILER " on " MEMUNCACHED_OS ")"
-
-#define LISTEN_BACKLOG 5
-#define MEMUNCACHED_VERSION "1.0"
-#define STRINGIFY(A) #A
 
 #endif

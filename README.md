@@ -16,8 +16,8 @@ _memuncached_ is the worst undistributed memory object caching system.
 
 | Command | Arguments              | Returns | Description                           |
 | ------- | ---------------------- | ------- | ------------------------------------- |
-| STAT    | -                      |         | Server key count, memory usage etc... |
-| VERSION | -                      |         | Server version, key count etc...      |
+| STT     | -                      |         | Server key count, memory usage etc... |
+| VER     | -                      |         | Server version, key count etc...      |
 | HELP    | -                      |         |                                       |
 | ADD     | KEY VALUE              |         |                                       |
 | GET     | KEY                    |         |                                       |

@@ -2,7 +2,7 @@
 
 #include "auth.h"
 #include "cache_table.h"
-#include "command.h"
+#include "connection.h"
 #include "defs.h"
 #include "logger.h"
 
@@ -12,6 +12,7 @@
 #include <fcntl.h>
 #include <netdb.h>
 #include <pthread.h>
+#include <signal.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -21,17 +22,16 @@
 #include <unistd.h>
 
 void* handle_connection(void* socket_desc);
+void handle_sigint(int _);
 
-typedef struct client_connection {
-    int socket_fd;
-    char addr[INET_ADDRSTRLEN];
-    int port;
-} client_connection_t;
+volatile bool is_running = true;
 
 int main(int argc, const char** argv)
 {
     LOG_INFO(MEMUNCACHED_HEADER);
     LOG_INFO("server starting...");
+
+    signal(SIGINT, handle_sigint);
 
     int port = 9999;
     struct sockaddr_in socket_addr = {
@@ -42,17 +42,22 @@ int main(int argc, const char** argv)
     int socket_fd = socket(AF_INET, SOCK_STREAM, 0);
 
     if (socket_fd == -1) {
-        LOG_FATAL("could not create socket. errno=%d, err=%s. closing...", errno, strerror(errno));
+        LOG_FATAL("could not create socket. (errno=%d, err=%s) closing...", errno, strerror(errno));
+        exit(1);
+    }
+
+    if (setsockopt(socket_fd, SOL_SOCKET, SO_REUSEADDR, &(int) { 1 }, sizeof(int)) < 0) {
+        LOG_FATAL("could not set option of the socket. (errno=%d, err=%s) closing...", errno, strerror(errno));
         exit(1);
     }
 
     if (bind(socket_fd, (struct sockaddr*)&socket_addr, sizeof(socket_addr)) == -1) {
-        LOG_FATAL("could not be bind. errno=%d, err=%s. closing...", errno, strerror(errno));
+        LOG_FATAL("could not be bind (errno=%d, err=%s). closing...", errno, strerror(errno));
         exit(1);
     }
 
     if (listen(socket_fd, LISTEN_BACKLOG) == -1) {
-        LOG_FATAL("could not listen. errno=%d, err=%s. closing...", errno, strerror(errno));
+        LOG_FATAL("could not listen (errno=%d, err=%s). closing...", errno, strerror(errno));
         exit(1);
     }
 
@@ -63,13 +68,14 @@ int main(int argc, const char** argv)
     char client_addr[INET_ADDRSTRLEN];
     int client_port, socket_client_fd;
     pthread_t thread_id;
-    while (true) {
+    int thread_err;
+    while (is_running) {
         socket_client_fd = accept(socket_fd, (struct sockaddr*)&socket_client_addr, (socklen_t*)&socket_client_addr_len);
         inet_ntop(AF_INET, &socket_client_addr.sin_addr, client_addr, sizeof(client_addr));
         client_port = ntohs(socket_client_addr.sin_port);
 
         if (socket_client_fd == -1) {
-            LOG_ERROR("%s:%d - connot accept connection.", client_addr, client_port);
+            LOG_ERROR("%s:%d - connot accept connection. (errno=%d, err=%s)", client_addr, client_port, errno, strerror(errno));
             exit(1);
         }
 
@@ -80,46 +86,21 @@ int main(int argc, const char** argv)
 
         strcpy(args.addr, client_addr);
 
-        if (pthread_create(&thread_id, NULL, handle_connection, (void*)&args) != 0) {
-            LOG_ERROR("%s:%d - thread could not spawned.", client_addr, client_port);
+        if ((thread_err = pthread_create(&thread_id, NULL, handle_connection, (void*)&args)) != 0) {
+            args.thread_id = thread_id;
+            LOG_ERROR("%s:%d - thread could not spawned. (errno=%d, err=%s)", client_addr, client_port, thread_err, strerror(thread_err));
+            close(socket_client_fd);
         } else {
             LOG_INFO("%s:%d - connection accepted.", client_addr, client_port);
         }
     }
 
+    close(socket_fd);
+
     return 0;
 }
 
-void* handle_connection(void* vconn)
+void handle_sigint(int _)
 {
-    //Get the socket descriptor
-    client_connection_t* conn = (client_connection_t*)vconn;
-
-    int read_size;
-    char *message, client_message[2000];
-
-    //Send some messages to the client
-    message = MEMUNCACHED_HEADER "\n";
-    write(conn->socket_fd, message, strlen(message));
-
-    //Receive a message from client
-    while ((read_size = recv(conn->socket_fd, client_message, 2000, 0)) > 0) {
-        //end of string marker
-        client_message[read_size] = '\0';
-
-        //Send the message back to client
-        write(conn->socket_fd, client_message, strlen(client_message));
-
-        //clear the message buffer
-        memset(client_message, 0, 2000);
-    }
-
-    if (read_size == 0) {
-        LOG_INFO("%s:%d - client disconnected.", conn->addr, conn->port);
-        fflush(stdout);
-    } else if (read_size == -1) {
-        LOG_ERROR("%s:%d - recv failed. errno=%d, err=%s", conn->addr, conn->port, errno, strerror(errno));
-    }
-
-    return 0;
+    is_running = false;
 }
