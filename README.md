@@ -46,15 +46,15 @@ Invalid command.
 | ------- | ---------------------- | -------------------------------------------------------- | ------------------------------------- |
 | ADD     | KEY VALUE              |                                                          |                                       |
 | APP     | KEY VALUE              |                                                          |                                       |
-| BYE     | -                      | <code>200 OK<br/>bye.</code>                             |                                       |
+| BYE     | -                      | <pre>200 OK<br/>bye.</pre>                             |                                       |
 | DEC     | KEY [OFFSET] [INITIAL] |                                                          |                                       |
 | DEL     | KEY                    |                                                          |                                       |
 | INC     | KEY [OFFSET] [INITIAL] |                                                          |                                       |
 | GET     | KEY                    |                                                          |                                       |
 | PRE     | KEY VALUE              |                                                          |                                       |
 | SET     | KEY VALUE              |                                                          |                                       |
-| STT     | -                      | <code>200 OK<br/>client_count: 1<br/>key_count: 0</code> | Server key count, memory usage etc... |
-| VER     | -                      | <code>200 OK<br/>1.0</code>                              | Server version, key count etc...      |
+| STT     | -                      | <pre>200 OK<br/>client_count: 1<br/>key_count: 0</pre> | Server key count, memory usage etc... |
+| VER     | -                      | <pre>200 OK<br/>1.0</pre>                              | Server version, key count etc...      |
 
 
 
