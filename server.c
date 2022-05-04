@@ -5,6 +5,7 @@
 #include "defs.h"
 #include "hash_table.h"
 #include "logger.h"
+#include "vector.h"
 
 #include <arpa/inet.h>
 #include <ctype.h>
@@ -26,6 +27,7 @@ void handle_sigint(int _);
 
 volatile bool is_running = true;
 hash_table_t* table;
+vector_t* clients;
 
 int main(int argc, const char** argv)
 {
@@ -36,6 +38,8 @@ int main(int argc, const char** argv)
 
     table = hash_table_create(MEMUNCACHED_TABLE_INITIAL_SIZE);
     LOG_INFO("cache table with size %d created.", MEMUNCACHED_TABLE_INITIAL_SIZE);
+
+    clients = vector_create(10);
 
     int port = 9999;
     struct sockaddr_in socket_addr = {
@@ -88,27 +92,45 @@ int main(int argc, const char** argv)
             continue;
         }
 
-        client_connection_t* args = malloc(sizeof(client_connection_t));
+        client_connection_t* client = malloc(sizeof(client_connection_t));
 
-        args->socket_fd = socket_client_fd;
-        args->port = client_port;
+        client->socket_fd = socket_client_fd;
+        client->port = client_port;
+        client->is_thread_running = true;
 
-        strcpy(args->addr, client_addr);
+        strcpy(client->addr, client_addr);
 
-        if ((thread_err = pthread_create(&thread_id, NULL, handle_connection, (void*)args)) != 0) {
-            args->thread_id = thread_id;
+        if ((thread_err = pthread_create(&thread_id, NULL, handle_connection, (void*)client)) != 0) {
             LOG_ERROR("%s:%d - thread could not spawned. (errno=%d, err=%s)", client_addr, client_port, thread_err, strerror(thread_err));
             close(socket_client_fd);
+            free(client);
         } else {
+            if (!vector_insert(clients, (void*)client)) {
+                LOG_ERROR("%s:%d - could not insert client to clients vector. (errno=%d, err=%s)", client_addr, client_port, errno, strerror(errno));
+                LOG_DEBUG("%s:%d - clients.size = %lu, clients.count = %lu.", client_addr, client_port, clients->size, clients->count);
+            }
             LOG_INFO("%s:%d - connection accepted.", client_addr, client_port);
         }
     }
 
+    LOG_INFO("closing...");
+
+    vector_lock(clients);
+    client_connection_t* client;
+    for (size_t i = 0; i < clients->count; i++) {
+        client = (client_connection_t*)vector_at_unsafe(clients, i);
+        pthread_join(client->thread_id, NULL);
+    }
+    vector_unlock(clients);
+
     close(socket_fd);
-    LOG_INFO("socket closed.");
+    LOG_DEBUG("socket closed.");
 
     hash_table_destroy(table);
-    LOG_INFO("table destroyed.");
+    LOG_DEBUG("table destroyed.");
+
+    vector_destroy(clients);
+    LOG_DEBUG("clients vector destroyed.");
 
     return 0;
 }

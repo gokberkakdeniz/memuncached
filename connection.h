@@ -4,7 +4,7 @@
 /**
  * @file connection.h
  * @author Gokberk Akdeniz
- * @brief Parse messages, handle client connections
+ * @brief Parse messages, handle client connections, protocol declarations
  * @version 0.1
  * @date 2022-05-04
  * 
@@ -15,6 +15,7 @@
 #include "defs.h"
 #include "logger.h"
 #include "utils.h"
+#include "vector.h"
 
 #include <arpa/inet.h>
 #include <errno.h>
@@ -30,8 +31,6 @@
 static const char CLIENT_WELCOME_MESSAGE[] = MEMUNCACHED_HEADER "\n";
 static const size_t CLIENT_WELCOME_MESSAGE_LEN = sizeof(CLIENT_WELCOME_MESSAGE) / sizeof(CLIENT_WELCOME_MESSAGE[0]);
 
-extern hash_table_t* table;
-
 #define CONNECTION_RECV_LENGTH 10
 
 #define LOG_CLIENT_FORMAT "%s:%d (#%lu) - "
@@ -43,7 +42,7 @@ extern hash_table_t* table;
 #define RESPONSE_200_OK "200 OK"
 
 #define __RESPONSE_DATA(code, data) code "\r\n" data "\r\n\0"
-#define RESPONSE_WRITE(sock, code, data) write(sock, __RESPONSE_DATA(code, data), strlen(__RESPONSE_DATA(code, data)))
+#define RESPONSE_WRITE(sock, code, data_format, ...) dprintf(sock, "%s\r\n" data_format "\r\n\0", code, ##__VA_ARGS__)
 
 #define REPLY_BAD_REQUEST(sock, command, message, received)                                                                                 \
     {                                                                                                                                       \
@@ -51,10 +50,10 @@ extern hash_table_t* table;
         RESPONSE_WRITE(sock, RESPONSE_400_BAD_REQUEST, message);                                                                            \
     }
 
-#define REPLY_SUCCESS(sock, data)                                                                        \
-    {                                                                                                    \
-        LOG_INFO(LOG_CLIENT_FORMAT "status=%s, data=%s", LOG_CLIENT_FORMAT_ARGS, RESPONSE_200_OK, data); \
-        RESPONSE_WRITE(sock, RESPONSE_200_OK, data);                                                     \
+#define REPLY_SUCCESS(sock, data_format, ...)                                                                               \
+    {                                                                                                                       \
+        LOG_INFO(LOG_CLIENT_FORMAT "status=%s, data=" data_format, LOG_CLIENT_FORMAT_ARGS, RESPONSE_200_OK, ##__VA_ARGS__); \
+        RESPONSE_WRITE(sock, RESPONSE_200_OK, data_format, ##__VA_ARGS__);                                                  \
     }
 
 /**
@@ -65,6 +64,7 @@ typedef struct client_connection {
     char addr[INET_ADDRSTRLEN];
     int port;
     pthread_t thread_id;
+    bool is_thread_running;
 } client_connection_t;
 
 void* handle_connection(void* arg);

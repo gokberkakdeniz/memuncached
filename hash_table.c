@@ -1,7 +1,7 @@
 #include "hash_table.h"
 #include <stdio.h>
 
-hash_table_t* hash_table_create(uint64_t size)
+hash_table_t* hash_table_create(size_t size)
 {
     hash_table_t* table_ptr = (hash_table_t*)malloc(sizeof(hash_table_t));
 

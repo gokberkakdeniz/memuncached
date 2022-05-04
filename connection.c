@@ -1,11 +1,13 @@
 #include "connection.h"
+#include "vector.h"
 
-bool __thread is_thread_running = true;
+extern hash_table_t* table;
+extern vector_t* clients;
 
 void* handle_connection(void* arg)
 {
     client_connection_t* client = (client_connection_t*)arg;
-    pthread_t thread_id = pthread_self();
+    client->thread_id = pthread_self();
 
     LOG_INFO(LOG_CLIENT_FORMAT "thread started.", LOG_CLIENT_FORMAT_ARGS);
 
@@ -19,7 +21,7 @@ void* handle_connection(void* arg)
 
     write(client->socket_fd, CLIENT_WELCOME_MESSAGE, CLIENT_WELCOME_MESSAGE_LEN);
 
-    while (is_running && is_thread_running) {
+    while (is_running && client->is_thread_running) {
         is_end = false;
         command_len = CONNECTION_RECV_LENGTH + 1;
         command_free_len = command_len;
@@ -62,11 +64,17 @@ void* handle_connection(void* arg)
 
     clean_and_stop:
         free(command);
-        break;
+        client->is_thread_running = false;
     }
 
-    free(arg);
     close(client->socket_fd);
+    free(client);
+
+    if (is_running && vector_timed_lock(clients, 5) == 0) {
+        size_t client_index = 0;
+        vector_remove_unsafe(clients, client_index);
+        vector_unlock(clients);
+    }
 
     return NULL;
 }
@@ -130,15 +138,15 @@ void handle_command(const char* command, client_connection_t* client)
 void memuncached_bye(client_connection_t* client)
 {
     REPLY_SUCCESS(client->socket_fd, "bye.");
-    is_thread_running = false;
+    client->is_thread_running = false;
 }
 
 void memuncached_stt(client_connection_t* client)
 {
-    REPLY_SUCCESS(client->socket_fd, "stats...");
+    REPLY_SUCCESS(client->socket_fd, "client_count: %d\r\nkey_count: %d", clients->count, table->count);
 }
 
 void memuncached_ver(client_connection_t* client)
 {
-    REPLY_SUCCESS(client->socket_fd, "version...");
+    REPLY_SUCCESS(client->socket_fd, MEMUNCACHED_VERSION);
 }

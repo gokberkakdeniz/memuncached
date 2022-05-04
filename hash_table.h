@@ -47,8 +47,8 @@ typedef struct cache_value {
  */
 typedef struct hash_table {
     cache_value_t** table;
-    uint64_t count;
-    uint64_t size;
+    size_t count;
+    size_t size;
 } hash_table_t;
 
 /**
@@ -57,7 +57,7 @@ typedef struct hash_table {
  * @param size table size
  * @return hash_table_t* instance
  */
-hash_table_t* hash_table_create(uint64_t size);
+hash_table_t* hash_table_create(size_t size);
 
 /**
  * @brief destructor.
