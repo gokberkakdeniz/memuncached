@@ -2,37 +2,67 @@
 
 _memuncached_ is the worst undistributed memory object caching system.
 
-## Must To Do
+## Protocol
 
-- [ ] getStats(): array|false
-- [ ] getVersion(): array
-- [ ] add(string $key, mixed $value, int $expiration = ?): bool
-- [ ] get(string $key, callable $cache_cb = ?, int $$flags = ?): mixed
-- [ ] decrement(string $key, int $offset = 1, int $initial_value = 0, int $expiry = 0): int|false
-- [ ] increment(string $key, int $offset = 1, int $initial_value = 0, int $expiry = 0): int|false
-- [ ] delete(string $key, int $time = 0): bool
-- [ ] quit(): bool
-- [ ] set(string $key, mixed $value, int $expiration = ?): bool
+## Response
 
-| Command | Arguments              | Returns | Description                           |
-| ------- | ---------------------- | ------- | ------------------------------------- |
-| STT     | -                      |         | Server key count, memory usage etc... |
-| VER     | -                      |         | Server version, key count etc...      |
-| HELP    | -                      |         |                                       |
-| ADD     | KEY VALUE              |         |                                       |
-| GET     | KEY                    |         |                                       |
-| SET     | KEY VALUE              |         |                                       |
-| INC     | KEY [OFFSET] [INITIAL] |         |                                       |
-| DEC     | KEY [OFFSET] [INITIAL] |         |                                       |
-| DEL     | KEY                    |         |                                       |
-| BYE     | -                      |         |                                       |
+### Format
+
+```CODE DESCRIPTION\r\nMESSAGE\r\n\0```
+
+### Examples
+
+```
+200 OK
+```
+
+```
+200 OK
+1.0
+```
+
+```
+200 OK
+client_count: 1
+key_count: 0
+```
+
+```
+400 BAD REQUEST
+Invalid command.
+```
+
+## Responses
+
+- `200 OK`: 
+- `400 BAD REQUEST`: 
+
+
+
+## Commands
+
+
+| Command | Arguments              | Example Responses                                             | Description                           |
+| ------- | ---------------------- | ------------------------------------------------------------- | ------------------------------------- |
+| ADD     | KEY VALUE              |                                                               |                                       |
+| APP     | KEY VALUE              |                                                               |                                       |
+| BYE     | -                      | ```200 OK```<br/>```bye.```                                   |                                       |
+| DEC     | KEY [OFFSET] [INITIAL] |                                                               |                                       |
+| DEL     | KEY                    |                                                               |                                       |
+| INC     | KEY [OFFSET] [INITIAL] |                                                               |                                       |
+| GET     | KEY                    |                                                               |                                       |
+| PRE     | KEY VALUE              |                                                               |                                       |
+| SET     | KEY VALUE              |                                                               |                                       |
+| STT     | -                      | ```200 OK```<br/>```client_count: 1```<br/>```key_count: 0``` | Server key count, memory usage etc... |
+| VER     | -                      | ```200 OK```<br/>```1.0```                                    | Server version, key count etc...      |
+
+
+
 
 ## Nice To Do - Level 1
 
 - [ ] flush(int $delay = 0): bool
 - [ ] touch(string $key, int $expiration): bool
-- [ ] append(string $key, string $value): bool
-- [ ] prepend(string $key, string $value): bool
 - [ ] getAllKeys(): array|false
 - [ ] getMulti(array $keys, int $flags = ?): mixed
 - [ ] deleteMulti(array $keys, int $time = 0): array
