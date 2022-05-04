@@ -1,9 +1,9 @@
-#include "cache_table.h"
+#include "hash_table.h"
 #include <stdio.h>
 
-cache_table_t* cache_table_create(uint64_t size)
+hash_table_t* hash_table_create(uint64_t size)
 {
-    cache_table_t* table_ptr = (cache_table_t*)malloc(sizeof(cache_table_t));
+    hash_table_t* table_ptr = (hash_table_t*)malloc(sizeof(hash_table_t));
 
     table_ptr->table = (cache_value_t**)calloc(size, sizeof(cache_value_t*));
     table_ptr->size = size;
@@ -12,7 +12,7 @@ cache_table_t* cache_table_create(uint64_t size)
     return table_ptr;
 }
 
-void cache_table_destroy(cache_table_t* table)
+void hash_table_destroy(hash_table_t* table)
 {
     for (size_t i = 0; i < table->size; i++) {
         if (table->table[i] != NULL) {
@@ -25,7 +25,7 @@ void cache_table_destroy(cache_table_t* table)
     free(table);
 }
 
-bool cache_table_set(cache_table_t* table, cache_value_key key, cache_value_type type, void* value)
+bool hash_table_set(hash_table_t* table, cache_value_key key, cache_value_type type, void* value)
 {
     int64_t index = fnv1a(key) % table->size;
 
@@ -51,16 +51,16 @@ bool cache_table_set(cache_table_t* table, cache_value_key key, cache_value_type
     return true;
 }
 
-cache_value_t* cache_table_get(cache_table_t* table, cache_value_key key)
+cache_value_t* hash_table_get(hash_table_t* table, cache_value_key key)
 {
     int64_t index = fnv1a(key) % table->size;
 
     return table->table[index];
 }
 
-cache_value_t* cache_table_inc(cache_table_t* table, cache_value_key key)
+cache_value_t* hash_table_inc(hash_table_t* table, cache_value_key key)
 {
-    cache_value_t* value = cache_table_get(table, key);
+    cache_value_t* value = hash_table_get(table, key);
 
     if (value == NULL) {
         return NULL;
@@ -81,9 +81,9 @@ cache_value_t* cache_table_inc(cache_table_t* table, cache_value_key key)
     return value;
 }
 
-cache_value_t* cache_table_dec(cache_table_t* table, cache_value_key key)
+cache_value_t* hash_table_dec(hash_table_t* table, cache_value_key key)
 {
-    cache_value_t* value = cache_table_get(table, key);
+    cache_value_t* value = hash_table_get(table, key);
 
     if (value == NULL) {
         return NULL;
@@ -104,7 +104,7 @@ cache_value_t* cache_table_dec(cache_table_t* table, cache_value_key key)
     return value;
 }
 
-bool cache_table_del(cache_table_t* table, cache_value_key key)
+bool hash_table_del(hash_table_t* table, cache_value_key key)
 {
     int64_t index = fnv1a(key) % table->size;
     cache_value_t* value = table->table[index];

@@ -2,7 +2,7 @@
 #define H_HASH_TABLE
 
 /**
- * @file cache_table.h
+ * @file hash_table.h
  * @author Gokberk Akdeniz
  * @brief Hash table for caching decimal, real and string values
  * @version 0.1
@@ -45,26 +45,26 @@ typedef struct cache_value {
 /**
  * @brief cache table instance
  */
-typedef struct cache_table {
+typedef struct hash_table {
     cache_value_t** table;
     uint64_t count;
     uint64_t size;
-} cache_table_t;
+} hash_table_t;
 
 /**
  * @brief constructor.
  * 
  * @param size table size
- * @return cache_table_t* instance
+ * @return hash_table_t* instance
  */
-cache_table_t* cache_table_create(uint64_t size);
+hash_table_t* hash_table_create(uint64_t size);
 
 /**
  * @brief destructor.
  * 
  * @param table instance
  */
-void cache_table_destroy(cache_table_t* table);
+void hash_table_destroy(hash_table_t* table);
 
 /**
  * @brief gets value from table. if not found returns NULL.
@@ -73,7 +73,7 @@ void cache_table_destroy(cache_table_t* table);
  * @param key cache key
  * @return cache_value_t* value 
  */
-cache_value_t* cache_table_get(cache_table_t* table, cache_value_key key);
+cache_value_t* hash_table_get(hash_table_t* table, cache_value_key key);
 
 /**
  * @brief puts/replaces new value to table.
@@ -84,7 +84,7 @@ cache_value_t* cache_table_get(cache_table_t* table, cache_value_key key);
  * @param value cache value
  * @return bool
  */
-bool cache_table_set(cache_table_t* table, cache_value_key key, cache_value_type type, void* value);
+bool hash_table_set(hash_table_t* table, cache_value_key key, cache_value_type type, void* value);
 
 /**
  * @brief increments cache value. if not found or not number, returns NULL.
@@ -93,7 +93,7 @@ bool cache_table_set(cache_table_t* table, cache_value_key key, cache_value_type
  * @param key cache key
  * @return cache_value_t* 
  */
-cache_value_t* cache_table_inc(cache_table_t* table, cache_value_key key);
+cache_value_t* hash_table_inc(hash_table_t* table, cache_value_key key);
 
 /**
  * @brief decrements cache value. if not found or not number, returns NULL.
@@ -102,7 +102,7 @@ cache_value_t* cache_table_inc(cache_table_t* table, cache_value_key key);
  * @param key cache key
  * @return cache_value_t* 
  */
-cache_value_t* cache_table_dec(cache_table_t* table, cache_value_key key);
+cache_value_t* hash_table_dec(hash_table_t* table, cache_value_key key);
 
 /**
  * @brief deletes cache value if found.
@@ -111,6 +111,6 @@ cache_value_t* cache_table_dec(cache_table_t* table, cache_value_key key);
  * @param key cache value
  * @return bool
  */
-bool cache_table_del(cache_table_t* table, cache_value_key key);
+bool hash_table_del(hash_table_t* table, cache_value_key key);
 
 #endif

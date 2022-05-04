@@ -1,6 +1,6 @@
 #include "connection.h"
 
-bool is_thread_running = true;
+bool __thread is_thread_running = true;
 
 void* handle_connection(void* arg)
 {
@@ -65,6 +65,7 @@ void* handle_connection(void* arg)
         break;
     }
 
+    free(arg);
     close(client->socket_fd);
 
     return NULL;
@@ -73,7 +74,7 @@ void* handle_connection(void* arg)
 void handle_command(const char* command, client_connection_t* client)
 {
     char* command_escaped = str_escape(command);
-    LOG_INFO(LOG_CLIENT_FORMAT "received: '%s'.", LOG_CLIENT_FORMAT_ARGS, command_escaped);
+    LOG_INFO(LOG_CLIENT_FORMAT "'%s'.", LOG_CLIENT_FORMAT_ARGS, command_escaped);
 
     char cmd[11] = { 0 };
     char* cptr = (char*)command;
@@ -91,7 +92,7 @@ void handle_command(const char* command, client_connection_t* client)
 
     } else if (strcasecmp(cmd, "BYE") == 0) {
         if (*cptr != 0) {
-            INVALID_SYNTAX("BYE", "The command does not take arguments.", command_escaped);
+            REPLY_BAD_REQUEST(client->socket_fd, "BYE", "The command does not take arguments.", command_escaped);
         } else {
             memuncached_bye(client);
         }
@@ -107,19 +108,19 @@ void handle_command(const char* command, client_connection_t* client)
 
     } else if (strcasecmp(cmd, "STT") == 0) {
         if (*cptr != 0) {
-            INVALID_SYNTAX("STT", "The command does not take arguments.", command_escaped);
+            REPLY_BAD_REQUEST(client->socket_fd, "STT", "The command does not take arguments.", command_escaped);
         } else {
-            memuncached_stat(client);
+            memuncached_stt(client);
         }
     } else if (strcasecmp(cmd, "VER") == 0) {
         if (*cptr != 0) {
-            INVALID_SYNTAX("VER", "The command does not take arguments.", command_escaped);
+            REPLY_BAD_REQUEST(client->socket_fd, "VER", "The command does not take arguments.", command_escaped);
         } else {
-            memuncached_version(client);
+            memuncached_ver(client);
         }
     } else {
         char* cmd_escaped = str_escape(cmd);
-        INVALID_SYNTAX(cmd_escaped, "Invalid command.", command_escaped);
+        REPLY_BAD_REQUEST(client->socket_fd, cmd_escaped, "Invalid command.", command_escaped);
         free(cmd_escaped);
     }
 
@@ -128,16 +129,16 @@ void handle_command(const char* command, client_connection_t* client)
 
 void memuncached_bye(client_connection_t* client)
 {
-    write(client->socket_fd, "bye.\n", 6);
+    REPLY_SUCCESS(client->socket_fd, "bye.");
     is_thread_running = false;
 }
 
-void memuncached_stat(client_connection_t* client)
+void memuncached_stt(client_connection_t* client)
 {
-    write(client->socket_fd, "bye.\n", 6);
-    is_thread_running = false;
+    REPLY_SUCCESS(client->socket_fd, "stats...");
 }
 
-void memuncached_version(client_connection_t* client)
+void memuncached_ver(client_connection_t* client)
 {
+    REPLY_SUCCESS(client->socket_fd, "version...");
 }

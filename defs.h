@@ -1,6 +1,7 @@
 #ifndef H_COMPILER
 #define H_COMPILER
 
+#include "hash_table.h"
 #include <stdbool.h>
 #include <string.h>
 
@@ -12,6 +13,8 @@ extern volatile bool is_running;
 #define LISTEN_BACKLOG 5
 #define MEMUNCACHED_VERSION "1.0"
 #define STRINGIFY(A) #A
+
+#define MEMUNCACHED_TABLE_INITIAL_SIZE 1000
 
 #define MEMUNCACHED_HEADER "Memuncached v" MEMUNCACHED_VERSION " (" MEMUNCACHED_COMPILER " on " MEMUNCACHED_OS ")"
 

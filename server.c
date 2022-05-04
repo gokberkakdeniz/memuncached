@@ -1,9 +1,9 @@
 #define LOG_LEVEL LOG_LEVEL_TRACE
 
 #include "auth.h"
-#include "cache_table.h"
 #include "connection.h"
 #include "defs.h"
+#include "hash_table.h"
 #include "logger.h"
 
 #include <arpa/inet.h>
@@ -25,6 +25,7 @@ void* handle_connection(void* socket_desc);
 void handle_sigint(int _);
 
 volatile bool is_running = true;
+hash_table_t* table;
 
 int main(int argc, const char** argv)
 {
@@ -32,6 +33,9 @@ int main(int argc, const char** argv)
     LOG_INFO("server starting...");
 
     signal(SIGINT, handle_sigint);
+
+    table = hash_table_create(MEMUNCACHED_TABLE_INITIAL_SIZE);
+    LOG_INFO("cache table with size %d created.", MEMUNCACHED_TABLE_INITIAL_SIZE);
 
     int port = 9999;
     struct sockaddr_in socket_addr = {
@@ -69,25 +73,30 @@ int main(int argc, const char** argv)
     int client_port, socket_client_fd;
     pthread_t thread_id;
     int thread_err;
+
     while (is_running) {
         socket_client_fd = accept(socket_fd, (struct sockaddr*)&socket_client_addr, (socklen_t*)&socket_client_addr_len);
         inet_ntop(AF_INET, &socket_client_addr.sin_addr, client_addr, sizeof(client_addr));
         client_port = ntohs(socket_client_addr.sin_port);
 
         if (socket_client_fd == -1) {
+            if (errno == EINTR) {
+                break;
+            }
+
             LOG_ERROR("%s:%d - connot accept connection. (errno=%d, err=%s)", client_addr, client_port, errno, strerror(errno));
-            exit(1);
+            continue;
         }
 
-        client_connection_t args = {
-            .socket_fd = socket_client_fd,
-            .port = client_port
-        };
+        client_connection_t* args = malloc(sizeof(client_connection_t));
 
-        strcpy(args.addr, client_addr);
+        args->socket_fd = socket_client_fd;
+        args->port = client_port;
 
-        if ((thread_err = pthread_create(&thread_id, NULL, handle_connection, (void*)&args)) != 0) {
-            args.thread_id = thread_id;
+        strcpy(args->addr, client_addr);
+
+        if ((thread_err = pthread_create(&thread_id, NULL, handle_connection, (void*)args)) != 0) {
+            args->thread_id = thread_id;
             LOG_ERROR("%s:%d - thread could not spawned. (errno=%d, err=%s)", client_addr, client_port, thread_err, strerror(thread_err));
             close(socket_client_fd);
         } else {
@@ -96,6 +105,10 @@ int main(int argc, const char** argv)
     }
 
     close(socket_fd);
+    LOG_INFO("socket closed.");
+
+    hash_table_destroy(table);
+    LOG_INFO("table destroyed.");
 
     return 0;
 }

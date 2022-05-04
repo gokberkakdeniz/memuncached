@@ -30,16 +30,31 @@
 static const char CLIENT_WELCOME_MESSAGE[] = MEMUNCACHED_HEADER "\n";
 static const size_t CLIENT_WELCOME_MESSAGE_LEN = sizeof(CLIENT_WELCOME_MESSAGE) / sizeof(CLIENT_WELCOME_MESSAGE[0]);
 
+extern hash_table_t* table;
+
 #define CONNECTION_RECV_LENGTH 10
 
 #define LOG_CLIENT_FORMAT "%s:%d (#%lu) - "
 #define LOG_CLIENT_FORMAT_ARGS client->addr, client->port, client->thread_id
 #define LOG_CLIENT_ERROR_FORMAT "(errno=%d, err=%s)"
 #define LOG_CLIENT_ERROR_FORMAT_ARGS errno, strerror(errno)
-#define INVALID_SYNTAX(command, message, received)                                                                                              \
-    {                                                                                                                                           \
-        LOG_ERROR(LOG_CLIENT_FORMAT "invalid syntax. (cmd='%s', msg='%s', received='%s')", LOG_CLIENT_FORMAT_ARGS, command, message, received); \
-        write(client->socket_fd, "invalid\n", 9);                                                                                               \
+
+#define RESPONSE_400_BAD_REQUEST "400 BAD REQUEST"
+#define RESPONSE_200_OK "200 OK"
+
+#define __RESPONSE_DATA(code, data) code "\r\n" data "\r\n\0"
+#define RESPONSE_WRITE(sock, code, data) write(sock, __RESPONSE_DATA(code, data), strlen(__RESPONSE_DATA(code, data)))
+
+#define REPLY_BAD_REQUEST(sock, command, message, received)                                                                                 \
+    {                                                                                                                                       \
+        LOG_INFO(LOG_CLIENT_FORMAT "bad request. (cmd='%s', msg='%s', received='%s')", LOG_CLIENT_FORMAT_ARGS, command, message, received); \
+        RESPONSE_WRITE(sock, RESPONSE_400_BAD_REQUEST, message);                                                                            \
+    }
+
+#define REPLY_SUCCESS(sock, data)                                                                        \
+    {                                                                                                    \
+        LOG_INFO(LOG_CLIENT_FORMAT "status=%s, data=%s", LOG_CLIENT_FORMAT_ARGS, RESPONSE_200_OK, data); \
+        RESPONSE_WRITE(sock, RESPONSE_200_OK, data);                                                     \
     }
 
 /**
@@ -58,8 +73,8 @@ void handle_command(const char* command, client_connection_t* client);
 
 void memuncached_bye(client_connection_t* client);
 
-void memuncached_stat(client_connection_t* client);
+void memuncached_stt(client_connection_t* client);
 
-void memuncached_version(client_connection_t* client);
+void memuncached_ver(client_connection_t* client);
 
 #endif
