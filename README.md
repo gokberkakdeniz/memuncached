@@ -23,8 +23,8 @@ _memuncached_ is the worst undistributed memory object caching system.
 
 ```
 200 OK
-client_count: 1
-key_count: 0
+Client-Count: 1
+Key-Count: 0
 ```
 
 ```
@@ -53,7 +53,7 @@ Invalid command.
 | GET     | KEY                    | <pre></pre>                                            |                                          |
 | PRE     | KEY VALUE              | <pre></pre>                                            |                                          |
 | SET     | KEY VALUE              | <pre></pre>                                            |                                          |
-| STT     | -                      | <pre>200 OK<br/>client_count: 1<br/>key_count: 0</pre> | Get total key count, memory usage etc... |
+| STT     | -                      | <pre>200 OK<br/>Client-Count: 1<br/>Key-Count: 0</pre> | Get total key count, memory usage etc... |
 | VER     | -                      | <pre>200 OK<br/>1.0</pre>                              | Get server version.                      |
 
 

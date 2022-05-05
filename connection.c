@@ -164,7 +164,7 @@ void memuncached_bye(client_connection_t* client)
 
 void memuncached_stt(client_connection_t* client)
 {
-    REPLY_SUCCESS(client->socket_fd, "client_count: %d\r\nkey_count: %d", clients->count, table->count);
+    REPLY_SUCCESS(client->socket_fd, "Client-Count: %d\r\nKey-Count: %d", clients->count, table->count);
 }
 
 void memuncached_ver(client_connection_t* client)
