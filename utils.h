@@ -1,6 +1,7 @@
 #ifndef H_UTILS
 #define H_UTILS
 
+#include <ctype.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -24,6 +25,23 @@ static char* str_escape(const char* str)
     *eb_ptr = 0;
 
     return buffer;
+}
+
+static bool is_numeric_string(const char* str)
+{
+    char* itr = (char*)str;
+
+    if (*itr == 0) {
+        return false;
+    }
+
+    while (*itr != 0) {
+        if (!isdigit(*itr))
+            return false;
+        ++itr;
+    }
+
+    return true;
 }
 
 #endif

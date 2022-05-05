@@ -4,6 +4,11 @@
 extern hash_table_t* table;
 extern vector_t* clients;
 
+#define HANDLE_COMMAND_DONE goto handle_command_done;
+#define GET_NEXT_ARG(itr)   \
+    *itr == 0 ? NULL : itr; \
+    itr = put_null_terminator_unknown_size(itr);
+
 void* handle_connection(void* arg)
 {
     client_connection_t* client = (client_connection_t*)arg;
@@ -39,7 +44,7 @@ void* handle_connection(void* arg)
             }
 
             buffer[read_size] = '\0';
-            is_end = buffer[read_size - 1] == '\r' || buffer[read_size - 1] == '\n';
+            is_end = buffer[read_size - 1] == '\n';
 
             command_free_len = command_free_len - (read_size + 1);
             if (command_free_len < 0) {
@@ -100,49 +105,103 @@ void* handle_connection(void* arg)
     return NULL;
 }
 
+char* put_null_terminator_unknown_size(char* itr)
+{
+    while (*itr != 0 && *itr != ' ' && *itr != '\r' && *itr != '\n') {
+        ++itr;
+    }
+
+    while (*itr == ' ' || *itr == '\r' || *itr == '\n') {
+        *itr = 0;
+        ++itr;
+    }
+
+    return itr;
+}
+
 void handle_command(const char* command, client_connection_t* client)
 {
     char* command_escaped = str_escape(command);
-    LOG_INFO(LOG_CLIENT_FORMAT "'%s'.", LOG_CLIENT_FORMAT_ARGS, command_escaped);
+    LOG_INFO(LOG_CLIENT_FORMAT "Query received: '%s'", LOG_CLIENT_FORMAT_ARGS, command_escaped);
 
-    char cmd[11] = { 0 };
-    char* cptr = (char*)command;
+    char* itr = (char*)command;
 
-    for (size_t i = 0; i < 10 && *cptr != ' ' && *cptr != 0 && *cptr != '\r' && *cptr != '\n'; i++) {
-        cmd[i] = *cptr;
-        ++cptr;
-    }
+    char* cmd = GET_NEXT_ARG(itr);
 
-    if (*cptr == ' ' || *cptr == '\r' || *cptr == '\n') {
-        ++cptr;
+    if (cmd == NULL) {
+        HANDLE_COMMAND_DONE;
     }
 
     if (strcasecmp(cmd, "ADD") == 0) {
 
     } else if (strcasecmp(cmd, "BYE") == 0) {
-        if (*cptr != 0) {
+        if (*itr != 0) {
             REPLY_BAD_REQUEST(client->socket_fd, "BYE", "The command does not take arguments.", command_escaped);
-        } else {
-            memuncached_bye(client);
+            HANDLE_COMMAND_DONE;
         }
-    } else if (strcasecmp(cmd, "DEC") == 0) {
 
+        memuncached_bye(client);
+    } else if (strcasecmp(cmd, "DEC") == 0) {
+        char* key = GET_NEXT_ARG(itr);
+        char* offset = GET_NEXT_ARG(itr);
+        char* initial = GET_NEXT_ARG(itr);
+
+        LOG_DEBUG("key=%s, offset=%s, initial=%s", key, offset, initial);
+
+        if (key == NULL) {
+            REPLY_BAD_REQUEST(client->socket_fd, "DEC", "The argument KEY is mandatory.", command_escaped);
+            HANDLE_COMMAND_DONE;
+        }
+
+        if (offset != NULL && !is_numeric_string(offset)) {
+            REPLY_BAD_REQUEST(client->socket_fd, "DEC", "The argument OFFSET must be decimal.", command_escaped);
+            HANDLE_COMMAND_DONE;
+        }
+
+        if (initial != NULL && !is_numeric_string(initial)) {
+            REPLY_BAD_REQUEST(client->socket_fd, "DEC", "The argument INITIAL must be decimal.", command_escaped);
+            HANDLE_COMMAND_DONE;
+        }
+
+        memuncached_dec(client, key, offset, initial);
     } else if (strcasecmp(cmd, "DEL") == 0) {
 
     } else if (strcasecmp(cmd, "INC") == 0) {
+        char* key = GET_NEXT_ARG(itr);
+        char* offset = GET_NEXT_ARG(itr);
+        char* initial = GET_NEXT_ARG(itr);
 
+        LOG_DEBUG("key=%s, offset=%s, initial=%s", key, offset, initial);
+
+        if (key == NULL) {
+            REPLY_BAD_REQUEST(client->socket_fd, "INC", "The argument KEY is mandatory.", command_escaped);
+            HANDLE_COMMAND_DONE;
+        }
+
+        if (offset != NULL && !is_numeric_string(offset)) {
+            REPLY_BAD_REQUEST(client->socket_fd, "INC", "The argument OFFSET must be decimal.", command_escaped);
+            HANDLE_COMMAND_DONE;
+        }
+
+        if (initial != NULL && !is_numeric_string(initial)) {
+            REPLY_BAD_REQUEST(client->socket_fd, "INC", "The argument INITIAL must be decimal.", command_escaped);
+            HANDLE_COMMAND_DONE;
+        }
+
+        memuncached_inc(client, key, offset, initial);
     } else if (strcasecmp(cmd, "GET") == 0) {
 
     } else if (strcasecmp(cmd, "SET") == 0) {
 
     } else if (strcasecmp(cmd, "STT") == 0) {
-        if (*cptr != 0) {
+        if (*itr != 0) {
+            LOG_INFO("^%c^", *itr);
             REPLY_BAD_REQUEST(client->socket_fd, "STT", "The command does not take arguments.", command_escaped);
         } else {
             memuncached_stt(client);
         }
     } else if (strcasecmp(cmd, "VER") == 0) {
-        if (*cptr != 0) {
+        if (*itr != 0) {
             REPLY_BAD_REQUEST(client->socket_fd, "VER", "The command does not take arguments.", command_escaped);
         } else {
             memuncached_ver(client);
@@ -153,6 +212,9 @@ void handle_command(const char* command, client_connection_t* client)
         free(cmd_escaped);
     }
 
+    LOG_DEBUG("215");
+
+handle_command_done:
     free(command_escaped);
 }
 
@@ -170,4 +232,13 @@ void memuncached_stt(client_connection_t* client)
 void memuncached_ver(client_connection_t* client)
 {
     REPLY_SUCCESS(client->socket_fd, MEMUNCACHED_VERSION);
+}
+
+void memuncached_dec(client_connection_t* client, char* key, char* offset, char* initial)
+{
+}
+
+void memuncached_inc(client_connection_t* client, char* key, char* offset, char* initial)
+{
+    LOG_DEBUG("memuncached_inc");
 }

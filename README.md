@@ -44,15 +44,15 @@ Invalid command.
 
 | Command | Arguments              | Example Responses                                      | Description                              |
 | ------- | ---------------------- | ------------------------------------------------------ | ---------------------------------------- |
-| ADD     | KEY VALUE              | <pre></pre>                                            |                                          |
-| APP     | KEY VALUE              | <pre></pre>                                            |                                          |
+| ADD     | KEY VALUE_LENGTH VALUE | <pre></pre>                                            |                                          |
+| APP     | KEY VALUE_LENGTH VALUE | <pre></pre>                                            |                                          |
 | BYE     | -                      | <pre>200 OK<br/>bye.</pre>                             | Close connection.                        |
 | DEC     | KEY [OFFSET] [INITIAL] | <pre></pre>                                            |                                          |
 | DEL     | KEY                    | <pre></pre>                                            |                                          |
 | INC     | KEY [OFFSET] [INITIAL] | <pre></pre>                                            |                                          |
 | GET     | KEY                    | <pre></pre>                                            |                                          |
-| PRE     | KEY VALUE              | <pre></pre>                                            |                                          |
-| SET     | KEY VALUE              | <pre></pre>                                            |                                          |
+| PRE     | KEY VALUE_LENGTH VALUE | <pre></pre>                                            |                                          |
+| SET     | KEY VALUE_LENGTH VALUE | <pre></pre>                                            |                                          |
 | STT     | -                      | <pre>200 OK<br/>Client-Count: 1<br/>Key-Count: 0</pre> | Get total key count, memory usage etc... |
 | VER     | -                      | <pre>200 OK<br/>1.0</pre>                              | Get server version.                      |
 

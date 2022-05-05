@@ -46,14 +46,14 @@ static const size_t CLIENT_WELCOME_MESSAGE_LEN = sizeof(CLIENT_WELCOME_MESSAGE) 
 
 #define REPLY_BAD_REQUEST(sock, command, message, received)                                                                                 \
     {                                                                                                                                       \
-        LOG_INFO(LOG_CLIENT_FORMAT "bad request. (cmd='%s', msg='%s', received='%s')", LOG_CLIENT_FORMAT_ARGS, command, message, received); \
+        LOG_INFO(LOG_CLIENT_FORMAT "Bad Request. (cmd='%s', msg='%s', received='%s')", LOG_CLIENT_FORMAT_ARGS, command, message, received); \
         RESPONSE_WRITE(sock, RESPONSE_400_BAD_REQUEST, message);                                                                            \
     }
 
-#define REPLY_SUCCESS(sock, data_format, ...)                                                                               \
-    {                                                                                                                       \
-        LOG_INFO(LOG_CLIENT_FORMAT "status=%s, data=" data_format, LOG_CLIENT_FORMAT_ARGS, RESPONSE_200_OK, ##__VA_ARGS__); \
-        RESPONSE_WRITE(sock, RESPONSE_200_OK, data_format, ##__VA_ARGS__);                                                  \
+#define REPLY_SUCCESS(sock, data_format, ...)                                                                                   \
+    {                                                                                                                           \
+        LOG_INFO(LOG_CLIENT_FORMAT "OK. Data:\n>>>" data_format "<<<", LOG_CLIENT_FORMAT_ARGS, RESPONSE_200_OK, ##__VA_ARGS__); \
+        RESPONSE_WRITE(sock, RESPONSE_200_OK, data_format, ##__VA_ARGS__);                                                      \
     }
 
 /**
@@ -76,5 +76,9 @@ void memuncached_bye(client_connection_t* client);
 void memuncached_stt(client_connection_t* client);
 
 void memuncached_ver(client_connection_t* client);
+
+void memuncached_dec(client_connection_t* client, char* key, char* offset, char* initial);
+
+void memuncached_inc(client_connection_t* client, char* key, char* offset, char* initial);
 
 #endif
