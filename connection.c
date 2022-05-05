@@ -8,6 +8,7 @@ void* handle_connection(void* arg)
 {
     client_connection_t* client = (client_connection_t*)arg;
     client->thread_id = pthread_self();
+    pthread_detach(client->thread_id);
 
     LOG_INFO(LOG_CLIENT_FORMAT "thread started.", LOG_CLIENT_FORMAT_ARGS);
 
@@ -28,6 +29,15 @@ void* handle_connection(void* arg)
         command = (char*)calloc(command_len, sizeof(char));
 
         while (is_running && !is_end && (read_size = recv(client->socket_fd, buffer, buffer_size, 0)) > 0) {
+            if (read_size == 0) {
+                LOG_INFO(LOG_CLIENT_FORMAT "client disconnected.", LOG_CLIENT_FORMAT_ARGS);
+                fflush(stdout);
+                goto clean_and_stop;
+            } else if (read_size == -1) {
+                LOG_ERROR(LOG_CLIENT_FORMAT "recv failed. " LOG_CLIENT_ERROR_FORMAT, LOG_CLIENT_FORMAT_ARGS, LOG_CLIENT_ERROR_FORMAT_ARGS);
+                goto clean_and_stop;
+            }
+
             buffer[read_size] = '\0';
             is_end = buffer[read_size - 1] == '\r' || buffer[read_size - 1] == '\n';
 
@@ -35,7 +45,15 @@ void* handle_connection(void* arg)
             if (command_free_len < 0) {
                 command_free_len = command_len - (read_size + 1);
                 command_len *= 2;
-                command = (char*)realloc(command, command_len);
+                char* command_new = (char*)realloc(command, command_len);
+
+                if (command_new == NULL) {
+                    LOG_ERROR(LOG_CLIENT_FORMAT "could not realloc for command. " LOG_CLIENT_ERROR_FORMAT, LOG_CLIENT_FORMAT_ARGS, LOG_CLIENT_ERROR_FORMAT_ARGS);
+                    // TODO: send error
+                    goto clean_and_continue;
+                } else {
+                    command = command_new;
+                }
             }
 
             strcat(command, buffer);
@@ -43,13 +61,8 @@ void* handle_connection(void* arg)
             memset(buffer, 0, buffer_size);
         }
 
-        if (read_size == 0) {
-            LOG_INFO(LOG_CLIENT_FORMAT "client disconnected.", LOG_CLIENT_FORMAT_ARGS);
-            fflush(stdout);
-            goto clean_and_stop;
-        } else if (read_size == -1) {
-            LOG_ERROR(LOG_CLIENT_FORMAT "recv failed. " LOG_CLIENT_ERROR_FORMAT, LOG_CLIENT_FORMAT_ARGS, LOG_CLIENT_ERROR_FORMAT_ARGS);
-            goto clean_and_stop;
+        if (!is_end) {
+            goto clean_and_continue;
         }
 
         command_len = strlen(command);
@@ -59,6 +72,7 @@ void* handle_connection(void* arg)
 
         handle_command(command, client);
 
+    clean_and_continue:
         free(command);
         continue;
 
@@ -67,12 +81,19 @@ void* handle_connection(void* arg)
         client->is_thread_running = false;
     }
 
-    close(client->socket_fd);
-    free(client);
+    // TODO: test if vector_lock works...
+    if (is_running && vector_timed_lock(clients, 1) == 0) {
+        for (size_t i = 0; i < clients->count; i++) {
+            client_connection_t* c = (client_connection_t*)vector_at_unsafe(clients, i);
+            if (c->thread_id == client->thread_id) {
+                vector_remove_unsafe(clients, i);
+                break;
+            }
+        }
 
-    if (is_running && vector_timed_lock(clients, 5) == 0) {
-        size_t client_index = 0;
-        vector_remove_unsafe(clients, client_index);
+        close(client->socket_fd);
+        LOG_INFO(LOG_CLIENT_FORMAT "cleaned.", LOG_CLIENT_FORMAT_ARGS);
+        free(client);
         vector_unlock(clients);
     }
 

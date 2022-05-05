@@ -71,55 +71,58 @@ int main(int argc, const char** argv)
 
     LOG_INFO("listening on port %d.", port);
 
-    struct sockaddr_in socket_client_addr;
+    struct sockaddr_in socket_client_addr = { 0 };
     size_t socket_client_addr_len = sizeof(socket_client_addr);
-    char client_addr[INET_ADDRSTRLEN];
-    int client_port, socket_client_fd;
+    int socket_client_fd;
     pthread_t thread_id;
     int thread_err;
 
     while (is_running) {
-        socket_client_fd = accept(socket_fd, (struct sockaddr*)&socket_client_addr, (socklen_t*)&socket_client_addr_len);
-        inet_ntop(AF_INET, &socket_client_addr.sin_addr, client_addr, sizeof(client_addr));
-        client_port = ntohs(socket_client_addr.sin_port);
+        client_connection_t* client = (client_connection_t*)malloc(sizeof(client_connection_t));
+        client->socket_fd = accept(socket_fd, (struct sockaddr*)&socket_client_addr, (socklen_t*)&socket_client_addr_len);
 
-        if (socket_client_fd == -1) {
-            if (errno == EINTR) {
-                break;
+        if (client->socket_fd == -1) {
+            if (errno != EINTR) {
+                LOG_ERROR("connot accept connection. (errno=%d, err=%s)", errno, strerror(errno));
             }
 
-            LOG_ERROR("%s:%d - connot accept connection. (errno=%d, err=%s)", client_addr, client_port, errno, strerror(errno));
+            free(client);
+
             continue;
         }
 
-        client_connection_t* client = malloc(sizeof(client_connection_t));
-
-        client->socket_fd = socket_client_fd;
-        client->port = client_port;
+        inet_ntop(AF_INET, &socket_client_addr.sin_addr, client->addr, sizeof(client->addr));
+        client->port = ntohs(socket_client_addr.sin_port);
         client->is_thread_running = true;
 
-        strcpy(client->addr, client_addr);
-
         if ((thread_err = pthread_create(&thread_id, NULL, handle_connection, (void*)client)) != 0) {
-            LOG_ERROR("%s:%d - thread could not spawned. (errno=%d, err=%s)", client_addr, client_port, thread_err, strerror(thread_err));
-            close(socket_client_fd);
+            LOG_ERROR("%s:%d - thread could not spawned. (errno=%d, err=%s)", client->addr, client->port, thread_err, strerror(thread_err));
+            close(client->socket_fd);
             free(client);
         } else {
             if (!vector_insert(clients, (void*)client)) {
-                LOG_ERROR("%s:%d - could not insert client to clients vector. (errno=%d, err=%s)", client_addr, client_port, errno, strerror(errno));
-                LOG_DEBUG("%s:%d - clients.size = %lu, clients.count = %lu.", client_addr, client_port, clients->size, clients->count);
+                LOG_ERROR("%s:%d - could not insert client to clients vector. (errno=%d, err=%s)", client->addr, client->port, errno, strerror(errno));
+                LOG_DEBUG("%s:%d - clients.size = %lu, clients.count = %lu.", client->addr, client->port, clients->size, clients->count);
+                // TODO: what should we do?
             }
-            LOG_INFO("%s:%d - connection accepted.", client_addr, client_port);
+            LOG_INFO("%s:%d - connection accepted.", client->addr, client->port);
         }
     }
 
     LOG_INFO("closing...");
 
     vector_lock(clients);
-    client_connection_t* client;
-    for (size_t i = 0; i < clients->count; i++) {
-        client = (client_connection_t*)vector_at_unsafe(clients, i);
-        pthread_join(client->thread_id, NULL);
+    if (clients->count > 0) {
+        LOG_INFO("Waiting %lu %s to be closed...", clients->count, clients->count == 1 ? "thread" : "threads");
+    }
+    for (ssize_t i = clients->count - 1; i >= 0; i--) {
+        client_connection_t* client = (client_connection_t*)vector_at_unsafe(clients, i);
+        LOG_TRACE("%s:%d (#%lu)- waiting to be closed...", client->addr, client->port, client->thread_id);
+        shutdown(client->socket_fd, SHUT_WR);
+        shutdown(client->socket_fd, SHUT_RD);
+        close(client->socket_fd);
+        vector_remove_unsafe(clients, i);
+        free(client);
     }
     vector_unlock(clients);
 
