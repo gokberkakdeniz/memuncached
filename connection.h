@@ -39,12 +39,11 @@ static const size_t CLIENT_WELCOME_MESSAGE_LEN = sizeof(CLIENT_WELCOME_MESSAGE) 
 #define LOG_CLIENT_ERROR_FORMAT "(errno=%d, err=%s)"
 #define LOG_CLIENT_ERROR_FORMAT_ARGS errno, strerror(errno)
 
+#define RESPONSE_200_OK "200 OK"
 #define RESPONSE_400_BAD_REQUEST "400 BAD REQUEST"
 #define RESPONSE_404_NOT_FOUND "404 NOT FOUND"
-#define RESPONSE_200_OK "200 OK"
-#define RESPONSE_200_OK "200 OK"
+#define RESPONSE_500_SERVER_ERROR "500 SERVER ERROR"
 
-#define __RESPONSE_DATA(code, data) code "\r\n" data "\r\n\0"
 #define RESPONSE_WRITE(sock, code, data_format, ...) dprintf(sock, "%s\r\n%d\r\n" data_format "\r\n\0", code, snprintf(NULL, 0, data_format, ##__VA_ARGS__), ##__VA_ARGS__)
 
 #define REPLY_BAD_REQUEST(sock, command, message, received)                                                                                 \
@@ -53,16 +52,22 @@ static const size_t CLIENT_WELCOME_MESSAGE_LEN = sizeof(CLIENT_WELCOME_MESSAGE) 
         RESPONSE_WRITE(sock, RESPONSE_400_BAD_REQUEST, message);                                                                            \
     }
 
-#define REPLY_NOT_FOUND(sock, key)                                                     \
-    {                                                                                  \
-        LOG_INFO(LOG_CLIENT_FORMAT "NOT FOUND. Key: %s", LOG_CLIENT_FORMAT_ARGS, key); \
-        RESPONSE_WRITE(sock, RESPONSE_404_NOT_FOUND, "");                              \
+#define REPLY_SERVER_ERROR(sock, message_format, ...)                                                                     \
+    {                                                                                                                     \
+        LOG_INFO(LOG_CLIENT_FORMAT RESPONSE_500_SERVER_ERROR ". " message_format, LOG_CLIENT_FORMAT_ARGS, ##__VA_ARGS__); \
+        RESPONSE_WRITE(sock, RESPONSE_500_SERVER_ERROR, message_format, ##__VA_ARGS__);                                   \
     }
 
-#define REPLY_SUCCESS(sock, data_format, ...)                                                                 \
-    {                                                                                                         \
-        LOG_INFO(LOG_CLIENT_FORMAT "OK. Data: >>>" data_format "<<<", LOG_CLIENT_FORMAT_ARGS, ##__VA_ARGS__); \
-        RESPONSE_WRITE(sock, RESPONSE_200_OK, data_format, ##__VA_ARGS__);                                    \
+#define REPLY_NOT_FOUND(sock, key)                                                                   \
+    {                                                                                                \
+        LOG_INFO(LOG_CLIENT_FORMAT RESPONSE_404_NOT_FOUND ". Key: %s", LOG_CLIENT_FORMAT_ARGS, key); \
+        RESPONSE_WRITE(sock, RESPONSE_404_NOT_FOUND, "");                                            \
+    }
+
+#define REPLY_SUCCESS(sock, data_format, ...)                                                                               \
+    {                                                                                                                       \
+        LOG_INFO(LOG_CLIENT_FORMAT RESPONSE_200_OK ". Data: >>>" data_format "<<<", LOG_CLIENT_FORMAT_ARGS, ##__VA_ARGS__); \
+        RESPONSE_WRITE(sock, RESPONSE_200_OK, data_format, ##__VA_ARGS__);                                                  \
     }
 
 /**
@@ -93,5 +98,7 @@ void memuncached_inc(client_connection_t* client, char* key, char* offset, char*
 void memuncached_del(client_connection_t* client, char* key);
 
 void memuncached_get(client_connection_t* client, char* key);
+
+void memuncached_set(client_connection_t* client, char* key, char* type, char* length);
 
 #endif

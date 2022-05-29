@@ -40,6 +40,7 @@ typedef struct cache_value {
     cache_value_key key;
     cache_value_type type;
     void* value;
+    size_t length;
 } cache_value_t;
 
 /**
@@ -84,7 +85,7 @@ cache_value_t* hash_table_get(hash_table_t* table, cache_value_key key);
  * @param value cache value
  * @return bool
  */
-bool hash_table_set(hash_table_t* table, cache_value_key key, cache_value_type type, void* value);
+bool hash_table_set(hash_table_t* table, cache_value_key key, cache_value_type type, void* value, size_t size);
 
 /**
  * @brief increments cache value. if not found or not number, returns NULL.

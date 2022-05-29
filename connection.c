@@ -54,7 +54,7 @@ void* handle_connection(void* arg)
 
                 if (command_new == NULL) {
                     LOG_ERROR(LOG_CLIENT_FORMAT "could not realloc for command. " LOG_CLIENT_ERROR_FORMAT, LOG_CLIENT_FORMAT_ARGS, LOG_CLIENT_ERROR_FORMAT_ARGS);
-                    // TODO: send error
+                    REPLY_SERVER_ERROR(client->socket_fd, "Realloc failed.");
                     goto clean_and_continue;
                 } else {
                     command = command_new;
@@ -210,7 +210,38 @@ void handle_command(const char* command, client_connection_t* client)
 
         memuncached_get(client, key);
     } else if (strcasecmp(cmd, "SET") == 0) {
+        char* key = GET_NEXT_ARG(itr);
+        char* type = GET_NEXT_ARG(itr);
+        char* length = GET_NEXT_ARG(itr);
 
+        LOG_DEBUG("key=%s, type=%s, length=%s", key, type, length);
+
+        if (key == NULL) {
+            REPLY_BAD_REQUEST(client->socket_fd, "SET", "The argument KEY is mandatory.", command_escaped);
+            HANDLE_COMMAND_DONE;
+        }
+
+        if (type == NULL) {
+            REPLY_BAD_REQUEST(client->socket_fd, "SET", "The argument TYPE is mandatory.", command_escaped);
+            HANDLE_COMMAND_DONE;
+        }
+
+        if (*type == '-' || !is_decimal_string(type)) {
+            REPLY_BAD_REQUEST(client->socket_fd, "SET", "The argument TYPE must be positive integer.", command_escaped);
+            HANDLE_COMMAND_DONE;
+        }
+
+        if (length == NULL) {
+            REPLY_BAD_REQUEST(client->socket_fd, "SET", "The argument LENGTH is mandatory.", command_escaped);
+            HANDLE_COMMAND_DONE;
+        }
+
+        if (*length == '-' || !is_decimal_string(length)) {
+            REPLY_BAD_REQUEST(client->socket_fd, "SET", "The argument LENGTH must be positive integer.", command_escaped);
+            HANDLE_COMMAND_DONE;
+        }
+
+        memuncached_set(client, key, type, length);
     } else if (strcasecmp(cmd, "STT") == 0) {
         if (*itr != 0) {
             REPLY_BAD_REQUEST(client->socket_fd, "STT", "The command does not take arguments.", command_escaped);
@@ -259,9 +290,9 @@ void memuncached_dec(client_connection_t* client, char* key, char* offset, char*
         cache_value_real initial_r = initial == NULL ? 1 : atof(initial);
 
         if (initial_d == initial_r) {
-            hash_table_set(table, key, CACHE_VALUE_DECIMAL, (void*)&initial_d);
+            hash_table_set(table, key, CACHE_VALUE_DECIMAL, (void*)&initial_d, 0);
         } else {
-            hash_table_set(table, key, CACHE_VALUE_REAL, (void*)&initial_r);
+            hash_table_set(table, key, CACHE_VALUE_REAL, (void*)&initial_r, 0);
         }
     }
 
@@ -278,9 +309,9 @@ void memuncached_inc(client_connection_t* client, char* key, char* offset, char*
         cache_value_real initial_r = initial == NULL ? 1 : atof(initial);
 
         if (initial_d == initial_r) {
-            hash_table_set(table, key, CACHE_VALUE_DECIMAL, (void*)&initial_d);
+            hash_table_set(table, key, CACHE_VALUE_DECIMAL, (void*)&initial_d, 0);
         } else {
-            hash_table_set(table, key, CACHE_VALUE_REAL, (void*)&initial_r);
+            hash_table_set(table, key, CACHE_VALUE_REAL, (void*)&initial_r, 0);
         }
     }
 
@@ -305,7 +336,20 @@ void memuncached_get(client_connection_t* client, char* key)
         } else if (cache_value->type == CACHE_VALUE_REAL) {
             REPLY_SUCCESS(client->socket_fd, "%lf", *(cache_value_real*)cache_value->value);
         } else if (cache_value->type == CACHE_VALUE_STRING) {
-            REPLY_SUCCESS(client->socket_fd, "%s", *(cache_value_string*)cache_value->value);
+            int payload_len = cache_value->length;
+            int header_len = snprintf(NULL, 0, RESPONSE_200_OK "\r\n%d\r\n", payload_len);
+            int buffer_len = header_len + payload_len + 3;
+
+            char* buffer = (char*)calloc(buffer_len, sizeof(char));
+
+            LOG_DEBUG("payload_len: %d, header_len: %d, buffer_len: %d", payload_len, header_len, buffer_len);
+
+            sprintf(buffer, RESPONSE_200_OK "\r\n%d\r\n", payload_len);
+            memcpy(buffer + header_len, cache_value->value, payload_len);
+            strcpy(buffer + header_len + payload_len, "\r\n\0");
+
+            write(client->socket_fd, buffer, buffer_len);
+            free(buffer);
         } else {
             REPLY_SUCCESS(client->socket_fd, "");
             LOG_ERROR("Invalid data type found deleting (key=%s, type=%c).", key, cache_value->type);
@@ -313,6 +357,48 @@ void memuncached_get(client_connection_t* client, char* key)
     }
 }
 
-void memuncached_set(client_connection_t* client, char* key, unsigned char type)
+void memuncached_set(client_connection_t* client, char* key, char* type, char* length)
 {
+    int v_length = atol(length);
+    char* payload = (char*)calloc(v_length + 2, sizeof(char));
+
+    if (payload == NULL) {
+        REPLY_SERVER_ERROR(client->socket_fd, "Calloc failed.");
+    }
+
+    int v_len = v_length + 2;
+    while (v_len > 0) {
+        LOG_DEBUG("v_len: %d", v_len);
+        int read_size = recv(client->socket_fd, payload + v_length + 2 - v_len, v_len, 0);
+        if (read_size < 0) {
+            REPLY_SERVER_ERROR(client->socket_fd, "Read failed.");
+
+            goto clean_and_stop;
+        }
+        v_len -= read_size;
+    }
+
+    hash_table_del(table, key);
+    payload[v_length] = 0;
+    payload[v_length + 1] = 0;
+    LOG_DEBUG("<p>%s</p>", payload);
+
+    cache_value_type v_type = *type - '0';
+    if (v_type == CACHE_VALUE_DECIMAL) {
+        cache_value_decimal v_payload = atoll(payload);
+        hash_table_set(table, key, v_type, (void*)&v_payload, 0);
+    } else if (v_type == CACHE_VALUE_REAL) {
+        cache_value_real v_payload = atof(payload);
+        hash_table_set(table, key, v_type, (void*)&v_payload, 0);
+    } else if (v_type == CACHE_VALUE_STRING) {
+        hash_table_set(table, key, v_type, (void*)payload, v_length);
+    } else {
+        REPLY_BAD_REQUEST(client->socket_fd, "SET", "The argument LENGTH must be 0, 1, or 2.", type);
+        goto clean_and_stop;
+    }
+
+    REPLY_SUCCESS(client->socket_fd, "");
+
+clean_and_stop:
+    free(payload);
 }

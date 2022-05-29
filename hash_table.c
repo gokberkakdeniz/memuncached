@@ -25,16 +25,18 @@ void hash_table_destroy(hash_table_t* table)
     free(table);
 }
 
-bool hash_table_set(hash_table_t* table, cache_value_key key, cache_value_type type, void* value)
+bool hash_table_set(hash_table_t* table, cache_value_key key, cache_value_type type, void* value, size_t size)
 {
     int64_t index = fnv1a(key) % table->size;
 
     if (table->table[index] == NULL) {
         table->table[index] = (cache_value_t*)malloc(sizeof(cache_value_t));
+        table->table[index]->value = NULL;
     }
 
     table->table[index]->key = key;
     table->table[index]->type = type;
+    table->table[index]->length = size;
 
     if (table->table[index]->value != NULL) {
         free(table->table[index]->value);
@@ -47,8 +49,7 @@ bool hash_table_set(hash_table_t* table, cache_value_key key, cache_value_type t
         table->table[index]->value = (cache_value_real*)malloc(sizeof(cache_value_real));
         *(cache_value_real*)table->table[index]->value = *(cache_value_real*)value;
     } else if (type == CACHE_VALUE_STRING) {
-        size_t size = strlen(*(cache_value_string*)value) * sizeof(cache_value_string);
-        table->table[index]->value = (cache_value_string*)malloc(size);
+        table->table[index]->value = (cache_value_string*)calloc(size, sizeof(char));
         memcpy((cache_value_string*)table->table[index]->value, (cache_value_string*)value, size);
     }
 
