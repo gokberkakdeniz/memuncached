@@ -153,19 +153,28 @@ void handle_command(const char* command, client_connection_t* client)
             HANDLE_COMMAND_DONE;
         }
 
-        if (offset != NULL && !is_numeric_string(offset)) {
-            REPLY_BAD_REQUEST(client->socket_fd, "DEC", "The argument OFFSET must be decimal.", command_escaped);
+        if (offset != NULL && (*offset == '-' || !is_real_string(offset))) {
+            REPLY_BAD_REQUEST(client->socket_fd, "DEC", "The argument OFFSET must be positive real number.", command_escaped);
             HANDLE_COMMAND_DONE;
         }
 
-        if (initial != NULL && !is_numeric_string(initial)) {
-            REPLY_BAD_REQUEST(client->socket_fd, "DEC", "The argument INITIAL must be decimal.", command_escaped);
+        if (initial != NULL && !is_real_string(initial)) {
+            REPLY_BAD_REQUEST(client->socket_fd, "DEC", "The argument INITIAL must be real number.", command_escaped);
             HANDLE_COMMAND_DONE;
         }
 
         memuncached_dec(client, key, offset, initial);
     } else if (strcasecmp(cmd, "DEL") == 0) {
+        char* key = GET_NEXT_ARG(itr);
 
+        LOG_DEBUG("key=%s", key);
+
+        if (key == NULL) {
+            REPLY_BAD_REQUEST(client->socket_fd, "DEL", "The argument KEY is mandatory.", command_escaped);
+            HANDLE_COMMAND_DONE;
+        }
+
+        memuncached_del(client, key);
     } else if (strcasecmp(cmd, "INC") == 0) {
         char* key = GET_NEXT_ARG(itr);
         char* offset = GET_NEXT_ARG(itr);
@@ -178,24 +187,32 @@ void handle_command(const char* command, client_connection_t* client)
             HANDLE_COMMAND_DONE;
         }
 
-        if (offset != NULL && !is_numeric_string(offset)) {
-            REPLY_BAD_REQUEST(client->socket_fd, "INC", "The argument OFFSET must be decimal.", command_escaped);
+        if (offset != NULL && (*offset == '-' || !is_real_string(offset))) {
+            REPLY_BAD_REQUEST(client->socket_fd, "INC", "The argument OFFSET must be positive real number.", command_escaped);
             HANDLE_COMMAND_DONE;
         }
 
-        if (initial != NULL && !is_numeric_string(initial)) {
-            REPLY_BAD_REQUEST(client->socket_fd, "INC", "The argument INITIAL must be decimal.", command_escaped);
+        if (initial != NULL && !is_real_string(initial)) {
+            REPLY_BAD_REQUEST(client->socket_fd, "INC", "The argument INITIAL must be real number.", command_escaped);
             HANDLE_COMMAND_DONE;
         }
 
         memuncached_inc(client, key, offset, initial);
     } else if (strcasecmp(cmd, "GET") == 0) {
+        char* key = GET_NEXT_ARG(itr);
 
+        LOG_DEBUG("key=%s", key);
+
+        if (key == NULL) {
+            REPLY_BAD_REQUEST(client->socket_fd, "GET", "The argument KEY is mandatory.", command_escaped);
+            HANDLE_COMMAND_DONE;
+        }
+
+        memuncached_get(client, key);
     } else if (strcasecmp(cmd, "SET") == 0) {
 
     } else if (strcasecmp(cmd, "STT") == 0) {
         if (*itr != 0) {
-            LOG_INFO("^%c^", *itr);
             REPLY_BAD_REQUEST(client->socket_fd, "STT", "The command does not take arguments.", command_escaped);
         } else {
             memuncached_stt(client);
@@ -212,8 +229,6 @@ void handle_command(const char* command, client_connection_t* client)
         free(cmd_escaped);
     }
 
-    LOG_DEBUG("215");
-
 handle_command_done:
     free(command_escaped);
 }
@@ -226,7 +241,7 @@ void memuncached_bye(client_connection_t* client)
 
 void memuncached_stt(client_connection_t* client)
 {
-    REPLY_SUCCESS(client->socket_fd, "Client-Count: %d\r\nKey-Count: %d", clients->count, table->count);
+    REPLY_SUCCESS(client->socket_fd, "Client-Count: %d\nKey-Count: %d", clients->count, table->count);
 }
 
 void memuncached_ver(client_connection_t* client)
@@ -236,9 +251,68 @@ void memuncached_ver(client_connection_t* client)
 
 void memuncached_dec(client_connection_t* client, char* key, char* offset, char* initial)
 {
+    cache_value_real v_offset = offset == NULL ? 1 : atof(offset);
+    cache_value_t* cache_value = hash_table_dec(table, key, v_offset);
+
+    if (cache_value == NULL) {
+        cache_value_decimal initial_d = initial == NULL ? 1 : atoll(initial);
+        cache_value_real initial_r = initial == NULL ? 1 : atof(initial);
+
+        if (initial_d == initial_r) {
+            hash_table_set(table, key, CACHE_VALUE_DECIMAL, (void*)&initial_d);
+        } else {
+            hash_table_set(table, key, CACHE_VALUE_REAL, (void*)&initial_r);
+        }
+    }
+
+    memuncached_get(client, key);
 }
 
 void memuncached_inc(client_connection_t* client, char* key, char* offset, char* initial)
 {
-    LOG_DEBUG("memuncached_inc");
+    cache_value_real v_offset = offset == NULL ? 1 : atof(offset);
+    cache_value_t* cache_value = hash_table_inc(table, key, v_offset);
+
+    if (cache_value == NULL) {
+        cache_value_decimal initial_d = initial == NULL ? 1 : atoll(initial);
+        cache_value_real initial_r = initial == NULL ? 1 : atof(initial);
+
+        if (initial_d == initial_r) {
+            hash_table_set(table, key, CACHE_VALUE_DECIMAL, (void*)&initial_d);
+        } else {
+            hash_table_set(table, key, CACHE_VALUE_REAL, (void*)&initial_r);
+        }
+    }
+
+    memuncached_get(client, key);
+}
+
+void memuncached_del(client_connection_t* client, char* key)
+{
+    memuncached_get(client, key);
+    hash_table_del(table, key);
+}
+
+void memuncached_get(client_connection_t* client, char* key)
+{
+    cache_value_t* cache_value = hash_table_get(table, key);
+
+    if (cache_value == NULL) {
+        REPLY_NOT_FOUND(client->socket_fd, key);
+    } else {
+        if (cache_value->type == CACHE_VALUE_DECIMAL) {
+            REPLY_SUCCESS(client->socket_fd, "%ld", *(cache_value_decimal*)cache_value->value);
+        } else if (cache_value->type == CACHE_VALUE_REAL) {
+            REPLY_SUCCESS(client->socket_fd, "%lf", *(cache_value_real*)cache_value->value);
+        } else if (cache_value->type == CACHE_VALUE_STRING) {
+            REPLY_SUCCESS(client->socket_fd, "%s", *(cache_value_string*)cache_value->value);
+        } else {
+            REPLY_SUCCESS(client->socket_fd, "");
+            LOG_ERROR("Invalid data type found deleting (key=%s, type=%c).", key, cache_value->type);
+        }
+    }
+}
+
+void memuncached_set(client_connection_t* client, char* key, unsigned char type)
+{
 }

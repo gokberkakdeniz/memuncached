@@ -36,6 +36,10 @@ bool hash_table_set(hash_table_t* table, cache_value_key key, cache_value_type t
     table->table[index]->key = key;
     table->table[index]->type = type;
 
+    if (table->table[index]->value != NULL) {
+        free(table->table[index]->value);
+    }
+
     if (type == CACHE_VALUE_DECIMAL) {
         table->table[index]->value = (cache_value_decimal*)malloc(sizeof(cache_value_decimal));
         *(cache_value_decimal*)table->table[index]->value = *(cache_value_decimal*)value;
@@ -58,7 +62,7 @@ cache_value_t* hash_table_get(hash_table_t* table, cache_value_key key)
     return table->table[index];
 }
 
-cache_value_t* hash_table_inc(hash_table_t* table, cache_value_key key)
+cache_value_t* hash_table_inc(hash_table_t* table, cache_value_key key, cache_value_real offset)
 {
     cache_value_t* value = hash_table_get(table, key);
 
@@ -72,16 +76,16 @@ cache_value_t* hash_table_inc(hash_table_t* table, cache_value_key key)
 
     if (value->type == CACHE_VALUE_DECIMAL) {
         cache_value_decimal* val = (cache_value_decimal*)value->value;
-        *val = *val + 1;
+        *val = *val + offset;
     } else if (value->type == CACHE_VALUE_REAL) {
         cache_value_real* val = (cache_value_real*)value->value;
-        *val = *val + 1;
+        *val = *val + offset;
     }
 
     return value;
 }
 
-cache_value_t* hash_table_dec(hash_table_t* table, cache_value_key key)
+cache_value_t* hash_table_dec(hash_table_t* table, cache_value_key key, cache_value_real offset)
 {
     cache_value_t* value = hash_table_get(table, key);
 
@@ -95,10 +99,10 @@ cache_value_t* hash_table_dec(hash_table_t* table, cache_value_key key)
 
     if (value->type == CACHE_VALUE_DECIMAL) {
         cache_value_decimal* val = (cache_value_decimal*)value->value;
-        *val = *val - 1;
+        *val = *val - offset;
     } else if (value->type == CACHE_VALUE_REAL) {
         cache_value_real* val = (cache_value_real*)value->value;
-        *val = *val - 1;
+        *val = *val - offset;
     }
 
     return value;

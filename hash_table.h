@@ -7,7 +7,7 @@
  * @brief Hash table for caching decimal, real and string values
  * @version 0.1
  * @date 2022-05-01
- * 
+ *
  * @copyright Copyright (c) 2022
  */
 
@@ -53,7 +53,7 @@ typedef struct hash_table {
 
 /**
  * @brief constructor.
- * 
+ *
  * @param size table size
  * @return hash_table_t* instance
  */
@@ -61,23 +61,23 @@ hash_table_t* hash_table_create(size_t size);
 
 /**
  * @brief destructor.
- * 
+ *
  * @param table instance
  */
 void hash_table_destroy(hash_table_t* table);
 
 /**
  * @brief gets value from table. if not found returns NULL.
- * 
+ *
  * @param table instance
  * @param key cache key
- * @return cache_value_t* value 
+ * @return cache_value_t* value
  */
 cache_value_t* hash_table_get(hash_table_t* table, cache_value_key key);
 
 /**
  * @brief puts/replaces new value to table.
- * 
+ *
  * @param table instance
  * @param key cache key
  * @param type cached value type
@@ -88,25 +88,27 @@ bool hash_table_set(hash_table_t* table, cache_value_key key, cache_value_type t
 
 /**
  * @brief increments cache value. if not found or not number, returns NULL.
- * 
+ *
  * @param table instance
  * @param key cache key
- * @return cache_value_t* 
+ * @param offset offset
+ * @return cache_value_t*
  */
-cache_value_t* hash_table_inc(hash_table_t* table, cache_value_key key);
+cache_value_t* hash_table_inc(hash_table_t* table, cache_value_key key, cache_value_real offset);
 
 /**
  * @brief decrements cache value. if not found or not number, returns NULL.
- * 
+ *
  * @param table instance
  * @param key cache key
- * @return cache_value_t* 
+ * @param offset offset
+ * @return cache_value_t*
  */
-cache_value_t* hash_table_dec(hash_table_t* table, cache_value_key key);
+cache_value_t* hash_table_dec(hash_table_t* table, cache_value_key key, cache_value_real offset);
 
 /**
  * @brief deletes cache value if found.
- * 
+ *
  * @param table instance
  * @param key cache value
  * @return bool
