@@ -1,7 +1,9 @@
 CC=gcc
 CFLAGS=-std=gnu11 -ggdb3 -lcrypt -lpthread
 
-all: server
+all: server lib client
+
+# ============================================ SERVER ============================================
 
 vector.o: vector.c vector.h
 	$(CC) $(CFLAGS) -c vector.c -o vector.o
@@ -25,6 +27,22 @@ main.o: vector.o connection.o fnv.o hash_table.o main.c
 	gcc $(CFLAGS) vector.o connection.o fnv.o hash_table.o main.c -o main.o
 
 server: memuncached.o ;
+
+# ============================================ CLIENT ============================================
+
+libmemuncached.o: libmemuncached.c libmemuncached.h
+	$(CC) $(CFLAGS) -c libmemuncached.c -o libmemuncached.o
+
+client.o: libmemuncached.o logger.h client.c
+	$(CC) $(CFLAGS) libmemuncached.c client.c -o client.o
+
+
+lib: libmemuncached.o ;
+
+client: client.o ;
+
+
+# ========================================= MISCELLANEOUS ========================================
 
 
 clean:
