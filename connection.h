@@ -42,6 +42,7 @@ static const size_t CLIENT_WELCOME_MESSAGE_LEN = sizeof(CLIENT_WELCOME_MESSAGE) 
 #define RESPONSE_200_OK "200 OK"
 #define RESPONSE_400_BAD_REQUEST "400 BAD REQUEST"
 #define RESPONSE_404_NOT_FOUND "404 NOT FOUND"
+#define RESPONSE_409_KEY_EXISTS "409 KEY EXISTS"
 #define RESPONSE_500_SERVER_ERROR "500 SERVER ERROR"
 
 #define RESPONSE_WRITE(sock, code, data_format, ...) dprintf(sock, "%s\r\n%d\r\n" data_format "\r\n\0", code, snprintf(NULL, 0, data_format, ##__VA_ARGS__), ##__VA_ARGS__)
@@ -68,6 +69,12 @@ static const size_t CLIENT_WELCOME_MESSAGE_LEN = sizeof(CLIENT_WELCOME_MESSAGE) 
     {                                                                                                                       \
         LOG_INFO(LOG_CLIENT_FORMAT RESPONSE_200_OK ". Data: >>>" data_format "<<<", LOG_CLIENT_FORMAT_ARGS, ##__VA_ARGS__); \
         RESPONSE_WRITE(sock, RESPONSE_200_OK, data_format, ##__VA_ARGS__);                                                  \
+    }
+
+#define REPLY_KEY_EXISTS(sock)                                                           \
+    {                                                                                    \
+        LOG_INFO(LOG_CLIENT_FORMAT RESPONSE_409_KEY_EXISTS ".", LOG_CLIENT_FORMAT_ARGS); \
+        RESPONSE_WRITE(sock, RESPONSE_409_KEY_EXISTS, "");                               \
     }
 
 /**
@@ -100,5 +107,7 @@ void memuncached_del(client_connection_t* client, char* key);
 void memuncached_get(client_connection_t* client, char* key);
 
 void memuncached_set(client_connection_t* client, char* key, char* type, char* length);
+
+void memuncached_add(client_connection_t* client, char* key, char* type, char* length);
 
 #endif

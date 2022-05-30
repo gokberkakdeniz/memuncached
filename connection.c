@@ -133,7 +133,38 @@ void handle_command(const char* command, client_connection_t* client)
     }
 
     if (strcasecmp(cmd, "ADD") == 0) {
+        char* key = GET_NEXT_ARG(itr);
+        char* type = GET_NEXT_ARG(itr);
+        char* length = GET_NEXT_ARG(itr);
 
+        LOG_DEBUG("key=%s, type=%s, length=%s", key, type, length);
+
+        if (key == NULL) {
+            REPLY_BAD_REQUEST(client->socket_fd, "ADD", "The argument KEY is mandatory.", command_escaped);
+            HANDLE_COMMAND_DONE;
+        }
+
+        if (type == NULL) {
+            REPLY_BAD_REQUEST(client->socket_fd, "ADD", "The argument TYPE is mandatory.", command_escaped);
+            HANDLE_COMMAND_DONE;
+        }
+
+        if (*type == '-' || !is_decimal_string(type)) {
+            REPLY_BAD_REQUEST(client->socket_fd, "ADD", "The argument TYPE must be positive integer.", command_escaped);
+            HANDLE_COMMAND_DONE;
+        }
+
+        if (length == NULL) {
+            REPLY_BAD_REQUEST(client->socket_fd, "ADD", "The argument LENGTH is mandatory.", command_escaped);
+            HANDLE_COMMAND_DONE;
+        }
+
+        if (*length == '-' || !is_decimal_string(length)) {
+            REPLY_BAD_REQUEST(client->socket_fd, "ADD", "The argument LENGTH must be positive integer.", command_escaped);
+            HANDLE_COMMAND_DONE;
+        }
+
+        memuncached_add(client, key, type, length);
     } else if (strcasecmp(cmd, "BYE") == 0) {
         if (*itr != 0) {
             REPLY_BAD_REQUEST(client->socket_fd, "BYE", "The command does not take arguments.", command_escaped);
@@ -401,4 +432,13 @@ void memuncached_set(client_connection_t* client, char* key, char* type, char* l
 
 clean_and_stop:
     free(payload);
+}
+
+void memuncached_add(client_connection_t* client, char* key, char* type, char* length)
+{
+    if (hash_table_get(table, key) != NULL) {
+        REPLY_KEY_EXISTS(client->socket_fd);
+    } else {
+        memuncached_set(client, key, type, length);
+    }
 }
