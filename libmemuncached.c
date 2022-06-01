@@ -48,7 +48,81 @@ clean_and_return:
 
 void memuncached_stt(memuncached_client_t* client)
 {
-    LOG_DEBUG("%d\n", dprintf(client->fd, "stt\r\n"));
+    LOG_DEBUG("%d\n", dprintf(client->fd, "STT\r\n"));
+    int size = recv(client->fd, client->buffer, client->buffer_size, 0);
+    if (size < 2) {
+        size = 0;
+    }
+    client->buffer[size - 2] = 0;
+    LOG_INFO("msg: %s", client->buffer);
+}
+
+void memuncached_ver(memuncached_client_t* client)
+{
+    LOG_DEBUG("%d\n", dprintf(client->fd, "VER\r\n"));
+    int size = recv(client->fd, client->buffer, client->buffer_size, 0);
+    if (size < 2) {
+        size = 0;
+    }
+    client->buffer[size - 2] = 0;
+    LOG_INFO("msg: %s", client->buffer);
+}
+
+void __memuncached_inc(memuncached_client_t* client, char* key, ...)
+{
+    va_list opt_args;
+    va_start(opt_args, key);
+
+    int offset = va_arg(opt_args, int);
+    int initial = va_arg(opt_args, int);
+
+    if (offset == LIBMEMUNCACHED_DEFAULT_INT) {
+        LOG_DEBUG("%d\n", dprintf(client->fd, "INC %s\r\n", key));
+    } else if (initial == LIBMEMUNCACHED_DEFAULT_INT) {
+        LOG_DEBUG("%d\n", dprintf(client->fd, "INC %s %d\r\n", key, offset));
+    } else {
+        LOG_DEBUG("%d\n", dprintf(client->fd, "INC %s %d %d\r\n", key, offset, initial));
+    }
+
+    va_end(opt_args);
+
+    int size = recv(client->fd, client->buffer, client->buffer_size, 0);
+    if (size < 2) {
+        size = 0;
+    }
+    client->buffer[size - 2] = 0;
+    LOG_INFO("msg: %s", client->buffer);
+}
+
+void __memuncached_dec(memuncached_client_t* client, char* key, ...)
+{
+    va_list opt_args;
+    va_start(opt_args, key);
+
+    int offset = va_arg(opt_args, int);
+    int initial = va_arg(opt_args, int);
+
+    if (offset == LIBMEMUNCACHED_DEFAULT_INT) {
+        LOG_DEBUG("%d\n", dprintf(client->fd, "DEC %s\r\n", key));
+    } else if (initial == LIBMEMUNCACHED_DEFAULT_INT) {
+        LOG_DEBUG("%d\n", dprintf(client->fd, "DEC %s %d\r\n", key, offset));
+    } else {
+        LOG_DEBUG("%d\n", dprintf(client->fd, "DEC %s %d %d\r\n", key, offset, initial));
+    }
+
+    va_end(opt_args);
+
+    int size = recv(client->fd, client->buffer, client->buffer_size, 0);
+    if (size < 2) {
+        size = 0;
+    }
+    client->buffer[size - 2] = 0;
+    LOG_INFO("msg: %s", client->buffer);
+}
+
+void memuncached_del(memuncached_client_t* client, char* key)
+{
+    LOG_DEBUG("%d\n", dprintf(client->fd, "DEL %s\r\n", key));
     int size = recv(client->fd, client->buffer, client->buffer_size, 0);
     if (size < 2) {
         size = 0;
