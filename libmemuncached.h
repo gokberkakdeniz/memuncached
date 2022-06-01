@@ -16,12 +16,19 @@
 #include <unistd.h>
 
 #define LIBMEMUNCACHED_DEFAULT_INT INT_MIN
+#define LIBMEMUNCACHED_RECV_LENGTH 1000
 
 typedef struct memuncached_client {
     int fd;
     struct sockaddr_in addr;
     char* buffer;
     int buffer_size;
+    struct {
+        int code;
+        char* description;
+        size_t body_size;
+        char* body;
+    } response;
 } memuncached_client_t;
 
 memuncached_client_t* memuncached_connect(const char* ip, int port, const char* username, const char* password);
