@@ -45,7 +45,7 @@ static const size_t CLIENT_WELCOME_MESSAGE_LEN = sizeof(CLIENT_WELCOME_MESSAGE) 
 #define RESPONSE_409_KEY_EXISTS "409 KEY EXISTS"
 #define RESPONSE_500_SERVER_ERROR "500 SERVER ERROR"
 
-#define RESPONSE_WRITE(sock, code, data_format, ...) dprintf(sock, "%s\r\n%d\r\n" data_format "\r\n\0", code, snprintf(NULL, 0, data_format, ##__VA_ARGS__), ##__VA_ARGS__)
+#define RESPONSE_WRITE(sock, code, data_format, ...) dprintf(sock, "%s\r\n%d\r\n" data_format "\0\r\n", code, snprintf(NULL, 0, data_format, ##__VA_ARGS__), ##__VA_ARGS__)
 
 #define REPLY_BAD_REQUEST(sock, command, message, received)                                                                                 \
     {                                                                                                                                       \

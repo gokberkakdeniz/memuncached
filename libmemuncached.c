@@ -89,7 +89,7 @@ bool memuncached_recv(memuncached_client_t* client)
 
             payload_read_size += read_size;
 
-            if (payload_read_size >= client->response.body_size) {
+            if (payload_read_size >= client->response.body_size + 3) {
                 LOG_DEBUG("response.code %d", client->response.code);
                 LOG_DEBUG("response.description %s", client->response.description);
                 LOG_DEBUG("response.body_size %d", client->response.body_size);
@@ -184,21 +184,33 @@ clean_and_return:
     return NULL;
 }
 
-void memuncached_stt(memuncached_client_t* client)
+bool memuncached_stt(memuncached_client_t* client, memuncached_stt_result_t* result)
 {
-    LOG_DEBUG("%d\n", dprintf(client->fd, "STT\r\n"));
-    LOG_DEBUG("stt res: %s", memuncached_recv(client) ? "true" : "false");
+    dprintf(client->fd, "STT\r\n");
+
+    bool is_success = memuncached_recv(client);
+
+    if (is_success) {
+        // I know it is inefficient :/
+        result->client_count = atoi(sstrstr(client->response.body, "Client-Count: ", client->response.body_size) + 14);
+        result->key_count = atoi(sstrstr(client->response.body, "Key-Count: ", client->response.body_size) + 11);
+    }
+
+    return is_success;
 }
 
-void memuncached_ver(memuncached_client_t* client)
+bool memuncached_ver(memuncached_client_t* client, memuncached_ver_result_t* result)
 {
-    LOG_DEBUG("%d\n", dprintf(client->fd, "VER\r\n"));
-    int size = recv(client->fd, client->buffer, client->buffer_size, 0);
-    if (size < 2) {
-        size = 0;
+    dprintf(client->fd, "VER\r\n");
+
+    bool is_success = memuncached_recv(client);
+
+    if (is_success) {
+        client->response.body[client->response.body_size] = 0;
+        strcpy(result->version, client->response.body);
     }
-    client->buffer[size - 2] = 0;
-    LOG_INFO("msg: %s", client->buffer);
+
+    return is_success;
 }
 
 void __memuncached_inc(memuncached_client_t* client, char* key, ...)

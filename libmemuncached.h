@@ -2,6 +2,7 @@
 #define LIBMEMUNCACHED_H
 
 #include "logger.h"
+#include "utils.h"
 
 #include <arpa/inet.h>
 #include <fcntl.h>
@@ -12,6 +13,7 @@
 #include <stddef.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <sys/socket.h>
 #include <unistd.h>
 
@@ -33,19 +35,28 @@ typedef struct memuncached_client {
 
 memuncached_client_t* memuncached_connect(const char* ip, int port, const char* username, const char* password);
 
+typedef struct memuncached_stt_result {
+    int client_count;
+    int key_count;
+} memuncached_stt_result_t;
+
 /**
  * @brief get statistics
  *
  * @param client
  */
-void memuncached_stt(memuncached_client_t* client);
+bool memuncached_stt(memuncached_client_t* client, memuncached_stt_result_t* result);
+
+typedef struct memuncached_ver_result {
+    char version[5];
+} memuncached_ver_result_t;
 
 /**
  * @brief get server version
  *
  * @param client
  */
-void memuncached_ver(memuncached_client_t* client);
+bool memuncached_ver(memuncached_client_t* client, memuncached_ver_result_t* result);
 
 /**
  * @brief increment value

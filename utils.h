@@ -81,9 +81,19 @@ static bool is_real_string(const char* str)
     return true;
 }
 
-// static inline bool is_positive_string(const char* str)
-// {
-//     return *str != NULL && *str != '-';
-// }
+static char* sstrstr(char* haystack, char* needle, size_t length)
+{
+    size_t needle_length = strlen(needle);
+    size_t i;
+    for (i = 0; i < length; i++) {
+        if (i + needle_length > length) {
+            return NULL;
+        }
+        if (strncmp(&haystack[i], needle, needle_length) == 0) {
+            return &haystack[i];
+        }
+    }
+    return NULL;
+}
 
 #endif
