@@ -363,21 +363,25 @@ void memuncached_get(client_connection_t* client, char* key)
         REPLY_NOT_FOUND(client->socket_fd, key);
     } else {
         if (cache_value->type == CACHE_VALUE_DECIMAL) {
-            REPLY_SUCCESS(client->socket_fd, "%ld", *(cache_value_decimal*)cache_value->value);
+            int payload_len = snprintf(NULL, 0, "%ld", *(cache_value_decimal*)cache_value->value);
+            dprintf(client->socket_fd, RESPONSE_200_OK "\r\n%d %d\r\n%ld%c\r\n", payload_len, cache_value->type, *(cache_value_decimal*)cache_value->value, 0);
+            LOG_INFO(LOG_CLIENT_FORMAT RESPONSE_200_OK ". Data: >>>%ld<<<", LOG_CLIENT_FORMAT_ARGS, *(cache_value_decimal*)cache_value->value);
         } else if (cache_value->type == CACHE_VALUE_REAL) {
-            REPLY_SUCCESS(client->socket_fd, "%lf", *(cache_value_real*)cache_value->value);
+            int payload_len = snprintf(NULL, 0, "%lf", *(cache_value_real*)cache_value->value);
+            dprintf(client->socket_fd, RESPONSE_200_OK "\r\n%d %d\r\n%lf%c\r\n", payload_len, cache_value->type, *(cache_value_real*)cache_value->value, 0);
+            LOG_INFO(LOG_CLIENT_FORMAT RESPONSE_200_OK ". Data: >>>%lf<<<", LOG_CLIENT_FORMAT_ARGS, *(cache_value_real*)cache_value->value);
         } else if (cache_value->type == CACHE_VALUE_STRING) {
             int payload_len = cache_value->length;
-            int header_len = snprintf(NULL, 0, RESPONSE_200_OK "\r\n%d\r\n", payload_len);
+            int header_len = snprintf(NULL, 0, RESPONSE_200_OK "\r\n%d %d\r\n", payload_len, cache_value->type);
             int buffer_len = header_len + payload_len + 3;
 
             char* buffer = (char*)calloc(buffer_len, sizeof(char));
 
             LOG_DEBUG("payload_len: %d, header_len: %d, buffer_len: %d", payload_len, header_len, buffer_len);
 
-            sprintf(buffer, RESPONSE_200_OK "\r\n%d\r\n", payload_len);
+            sprintf(buffer, RESPONSE_200_OK "\r\n%d %d\r\n", payload_len, cache_value->type);
             memcpy(buffer + header_len, cache_value->value, payload_len);
-            strcpy(buffer + header_len + payload_len, "\r\n\0");
+            sprintf(buffer + header_len + payload_len, "%c\r\n", 0);
 
             write(client->socket_fd, buffer, buffer_len);
             free(buffer);

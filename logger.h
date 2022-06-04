@@ -12,7 +12,7 @@
 #define LOG_LEVEL_TRACE 5
 
 #ifndef LOG_LEVEL
-#define LOG_LEVEL LOG_LEVEL_TRACE
+#define LOG_LEVEL LOG_LEVEL_INFO
 #endif
 
 #define __LOG(format, level, ...)                                        \

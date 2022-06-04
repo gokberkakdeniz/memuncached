@@ -30,6 +30,7 @@ typedef struct memuncached_client {
         char* description;
         size_t body_size;
         char* body;
+        char body_type;
     } response;
 } memuncached_client_t;
 
@@ -58,6 +59,28 @@ typedef struct memuncached_ver_result {
  */
 bool memuncached_ver(memuncached_client_t* client, memuncached_ver_result_t* result);
 
+#define MEMCACHED_NUMBER_RESULT_DECIMAL 0
+#define MEMCACHED_NUMBER_RESULT_REAL 1
+#define MEMCACHED_NUMBER_RESULT_STRING 2
+
+typedef struct memuncached_value_result {
+    char type;
+    union {
+        double real;
+        int64_t decimal;
+        char* string;
+    };
+    int size;
+} memuncached_value_result_t;
+
+/**
+ * @brief frees value if type is string;
+ *
+ * @param result
+ * @return bool
+ */
+bool memuncached_value_result_clean(memuncached_value_result_t* result);
+
 /**
  * @brief increment value
  *
@@ -66,8 +89,8 @@ bool memuncached_ver(memuncached_client_t* client, memuncached_ver_result_t* res
  * @param [offset]
  * @param [initial]
  */
-void __memuncached_inc(memuncached_client_t* client, char* key, ...);
-#define memuncached_inc(client, key, ...) __memuncached_inc(client, key, ##__VA_ARGS__, LIBMEMUNCACHED_DEFAULT_INT, LIBMEMUNCACHED_DEFAULT_INT)
+bool __memuncached_inc(memuncached_client_t* client, char* key, memuncached_value_result_t* result, ...);
+#define memuncached_inc(client, key, result, ...) __memuncached_inc(client, key, result, ##__VA_ARGS__, LIBMEMUNCACHED_DEFAULT_INT, LIBMEMUNCACHED_DEFAULT_INT)
 
 /**
  * @brief decrement value
@@ -77,16 +100,28 @@ void __memuncached_inc(memuncached_client_t* client, char* key, ...);
  * @param [offset]
  * @param [initial]
  */
-void __memuncached_dec(memuncached_client_t* client, char* key, ...);
-#define memuncached_dec(client, key, ...) __memuncached_dec(client, key, ##__VA_ARGS__, LIBMEMUNCACHED_DEFAULT_INT, LIBMEMUNCACHED_DEFAULT_INT)
+bool __memuncached_dec(memuncached_client_t* client, char* key, memuncached_value_result_t* result, ...);
+#define memuncached_dec(client, key, result, ...) __memuncached_dec(client, key, result, ##__VA_ARGS__, LIBMEMUNCACHED_DEFAULT_INT, LIBMEMUNCACHED_DEFAULT_INT)
 
 /**
  * @brief deletes value identified by key
  *
  * @param client
  * @param key
+ * @param result
+ * @return bool
  */
-void memuncached_del(memuncached_client_t* client, char* key);
+bool memuncached_del(memuncached_client_t* client, char* key, memuncached_value_result_t* result);
+
+/**
+ * @brief gets value identified by key
+ *
+ * @param client
+ * @param key
+ * @param result
+ * @return bool
+ */
+bool memuncached_get(memuncached_client_t* client, char* key, memuncached_value_result_t* result);
 
 /**
  * @brief disconnect
