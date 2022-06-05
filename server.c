@@ -1,3 +1,5 @@
+#define _XOPEN_SOURCE
+
 #include "connection.h"
 #include "defs.h"
 #include "hash_table.h"

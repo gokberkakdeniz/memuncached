@@ -77,11 +77,7 @@ void* handle_connection(void* arg)
             // }
             // printf("\n===========buffer============\n");
 
-            LOG_DEBUG("INCNNCNC %d", command_len - command_free_len - read_size);
-
             memcpy(command + command_len - command_free_len - read_size, buffer, read_size);
-
-            LOG_DEBUG("2. command_len: %d ,, command_free_len: %d ,, read_size: %d", command_len, command_free_len, read_size);
 
             memset(buffer, 0, buffer_size);
         }
@@ -303,7 +299,7 @@ void handle_command(const char* command, int command_len, int payload_chunk_size
             HANDLE_COMMAND_DONE;
         }
 
-        memuncached_set(client, key, type, length, itr, payload_chunk_size);
+        memuncached_set(client, key, type, length, itr, payload_chunk_size, true);
     } else if (strcasecmp(cmd, "STT") == 0) {
         if (*itr != 0) {
             REPLY_BAD_REQUEST(client->socket_fd, "STT", "The command does not take arguments.", command_escaped);
@@ -423,7 +419,7 @@ void memuncached_get(client_connection_t* client, char* key)
     }
 }
 
-void memuncached_set(client_connection_t* client, char* key, char* type, char* length, char* payload_chunk, int payload_chunk_size)
+void memuncached_set(client_connection_t* client, char* key, char* type, char* length, char* payload_chunk, int payload_chunk_size, bool overwrite)
 {
     int v_length = atol(length);
     char* payload = (char*)calloc(v_length + 2, sizeof(char));
@@ -447,6 +443,11 @@ void memuncached_set(client_connection_t* client, char* key, char* type, char* l
             goto clean_and_stop;
         }
         v_len -= read_size;
+    }
+
+    if (!overwrite && hash_table_get(table, key) != NULL) {
+        REPLY_KEY_EXISTS(client->socket_fd);
+        goto clean_and_stop;
     }
 
     hash_table_del(table, key);
@@ -476,10 +477,5 @@ clean_and_stop:
 
 void memuncached_add(client_connection_t* client, char* key, char* type, char* length, char* payload_chunk, int payload_chunk_size)
 {
-    if (hash_table_get(table, key) != NULL) {
-        REPLY_KEY_EXISTS(client->socket_fd);
-    } else {
-        // TODO: HANDLE NULL 0
-        memuncached_set(client, key, type, length, payload_chunk, payload_chunk_size);
-    }
+    memuncached_set(client, key, type, length, payload_chunk, payload_chunk_size, false);
 }

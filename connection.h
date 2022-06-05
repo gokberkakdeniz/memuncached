@@ -107,7 +107,7 @@ void memuncached_del(client_connection_t* client, char* key);
 
 void memuncached_get(client_connection_t* client, char* key);
 
-void memuncached_set(client_connection_t* client, char* key, char* type, char* length, char* payload_chunk, int payload_chunk_size);
+void memuncached_set(client_connection_t* client, char* key, char* type, char* length, char* payload_chunk, int payload_chunk_size, bool overwrite);
 
 void memuncached_add(client_connection_t* client, char* key, char* type, char* length, char* payload_chunk, int payload_chunk_size);
 
