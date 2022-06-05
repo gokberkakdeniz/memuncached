@@ -48,4 +48,4 @@ doc:
 	pandoc README.pandoc.md -o README.pdf
 
 clean:
-	rm *.o README.pandoc.md README.pandoc.pdf 2&> /dev/null || true
+	rm *.o README.pandoc.md README.pdf 2&> /dev/null || true
