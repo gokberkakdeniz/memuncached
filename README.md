@@ -1,3 +1,13 @@
+---
+pdf_document: null
+geometry: margin=1.5cm
+output: pdf_document
+title: Izmir Institute of Technology
+subtitle:  CENG421 Project Report
+author: Gökberk Akdeniz - 250201041
+date: 10.06.2022
+---
+
 # memuncached
 
 _memuncached_ is the worst undistributed memory object caching system.
@@ -32,6 +42,7 @@ Tested on `Fedora 35` using `gcc (GCC) 11.3.1 20220421 (Red Hat 11.3.1-2)`, `GNU
 - cd _project\_folder_
 - make _`# Available targets: server, lib, client`_
 
+<!-- pandoc \newpage -->
 
 ## Protocol
 
@@ -54,9 +65,6 @@ abcde
 ```
 get mykey
 ```
-
-<!-- pandoc \newpage -->
-
 
 ## Response
 
@@ -98,6 +106,7 @@ Invalid command.
 - `404 NOT FOUND`:
 - `405 KEY EXIST`:
 
+<!-- pandoc \newpage -->
 
 ## Commands
 
@@ -113,9 +122,6 @@ Invalid command.
 | SET                 | KEY TYPE LENGTH<br/>VALUE                                                         | <pre>200 OK<br/>0</pre>                                       | Set the value of the key.                                                                      |
 | STT                 | -                                                                                 | <pre>200 OK<br/>28<br/>Client-Count: 1<br/>Key-Count: 0</pre> | Get total key count, client count etc...                                                       |
 | VER                 | -                                                                                 | <pre>200 OK<br/>3<br/>1.0</pre>                               | Get server version.                                                                            |
-
-
-<!-- pandoc \newpage -->
 
 ## Future Work
 
