@@ -1,9 +1,3 @@
----
-  pdf_document: null
-  geometry: margin=1.5cm
-  output: pdf_document
----
-
 # memuncached
 
 _memuncached_ is the worst undistributed memory object caching system.

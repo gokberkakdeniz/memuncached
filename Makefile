@@ -45,7 +45,8 @@ client: client.o ;
 # ========================================= MISCELLANEOUS ========================================
 
 doc:
-	sed -E 's/<!-- pandoc (.*?) -->/\1/g; s/<br( )?(\/)?>/ \\newline /g; s/<(\/)?pre>//g' <README.md >README.pandoc.md
+	echo -e "---\npdf_document: null\ngeometry: margin=1.5cm\noutput: pdf_document\n---\n" > README.pandoc.md
+	sed -E 's/<!-- pandoc (.*?) -->/\1/g; s/<br( )?(\/)?>/ \\newline /g; s/<(\/)?pre>//g' <README.md >>README.pandoc.md
 	pandoc README.pandoc.md -o README.pdf
 
 clean:
