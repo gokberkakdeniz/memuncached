@@ -21,12 +21,18 @@ to speed up webservers, applications, APIs.
 
 Although I influenced from [___memcached___](https://memcached.org/), I did not implemented their protocol but I designed myself. The commands are selected and slightly changed from [___PHP memcached client documentation___](https://www.php.net/manual/en/class.memcached.php#chunklist_reference).
 
-The software consists of 3 parts: **server**, **client library**, **client cli**.
+The software consists of 2 parts: **server**, **client library**.
 
 - As its name, **server** stores key-values in the memory and accepts TCP connections.
-- The **client library** is **C library** provides **connection**, **disconnection**, and **command** implementations. 
-You can think it like _database client library_.
-- The **client cli** is telnet like application to connect and send commands.. You can think it like _mysql_ client cli application.
+- The **client library** is **C library** provides 
+**connection**, **disconnection**, and **command** implementations. 
+You can think it like _database client library_. 
+Since I am developing database-like protocol 
+I think it is better to write client library 
+rather than _telnet_ like interactive application.
+It is harder than cli because it needs proper way 
+to handle server responses to provide corresponding 
+functions (___memuncached\_\*___) for commonds defined in the protocol.
 
 It is written in GNU dialect of ISO C11, _gnu11_.
 
@@ -34,7 +40,39 @@ The _server_ is written first while using _telnet_, so it is fully compatible wi
 
 The _server_ handles multiple clients simulataneously thanks to _multithreading_.
 
-Also, I published the full source code at ___[github.com/gokberkakdeniz/memuncached](https://github.com/gokberkakdeniz/memuncached)___.
+Also, I published the full source code at 
+___[github.com/gokberkakdeniz/memuncached](https://github.com/gokberkakdeniz/memuncached)___.
+
+## adasd
+
+asd
+
+## Statistics
+
+The whole project consist of 2.35K~ LoC and 50~ commits since 1st of May 2022.
+
+```
+# gokberk @ akdeniz in ~/Desktop/IYTE/memuncached on git:master x [19:01:32] 
+$ cat *.c | wc -l      
+1552
+
+# gokberk @ akdeniz in ~/Desktop/IYTE/memuncached on git:master x [19:06:50] 
+$ cat *.c *.h Makefile *.sh | wc -l
+2347
+```
+
+<!-- pandoc \newpage -->
+
+## Screenshots
+
+![__libmemcached__ client library demo](./screenshots/libmemcached_screenshot.png)
+
+<!-- pandoc \newpage -->
+
+
+![two __telnet__ clients demo (numbers respresents execution order)](./screenshots/telnet_screenshot.png)
+
+<!-- pandoc \newpage -->
 
 
 ## Instructions
@@ -55,7 +93,8 @@ Tested on `Fedora 35` using `gcc (GCC) 11.3.1 20220421 (Red Hat 11.3.1-2)`, `GNU
 ## Usage
 
 - Run `./server.o` to start _server_.
-- Run `./lib_demo.o` to start _libmemuncached demo application_ which connects server and executes a few commands.
+- Run `./lib_demo.o` to start _libmemuncached demo application_ which 
+connects server and executes a few commands.
 - Run `telnet localhost 9999` to connect the server via telnet.
 
 
@@ -91,7 +130,8 @@ get mykey
 
 ### Format
 
-All responses are in the same format except one optional value, _TYPE_, which is required for **getter** (get, add) commands.
+All responses are in the same format except one optional value, _TYPE_, 
+which is required for **getter** (get, add) commands.
 
 
 - ```{CODE} {DESCRIPTION}\r\n{LENGTH} [TYPE]\r\n{PAYLOAD}\0\r\n```
@@ -159,14 +199,14 @@ Invalid command.
 ### Others
 
 - Key validation.
-- Authentication with username and password using [___crypt.h___](https://man7.org/linux/man-pages/man3/crypt.3.html).
-- Unit tests.
-- Better error handling and reporting for client library (instead of returning bool, return error codes).
+- Authentication with username and password 
+using [___crypt.h___](https://man7.org/linux/man-pages/man3/crypt.3.html).
+- Better error handling and reporting for client library 
+(instead of returning bool, return error codes).
+- The telnet/mysql_cli like **client cli**.
 
-<!-- pandoc \newpage -->
+## Conclusion
 
-## Screenshots
-
-![__libmemcached__ client library demo](./screenshots/libmemcached_screenshot.png)
-
-![__telnet__ demo](./screenshots/telnet_screenshot.png)
+I learnt various topics including network protocol design, concurrency models, 
+POSIX threads, Linux sockets, client/server model, logging, Makefiles. 
+I believe that this project made me better programmer.

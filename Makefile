@@ -1,7 +1,7 @@
 CC=gcc
 CFLAGS=-std=gnu11 -ggdb3 -lpthread
 
-all: server lib_demo client
+all: server lib lib_demo
 
 # ============================================ SERVER ============================================
 
@@ -33,17 +33,12 @@ server: server.o ;
 libmemuncached.o: libmemuncached.c libmemuncached.h
 	$(CC) $(CFLAGS) -c libmemuncached.c -o libmemuncached.o
 
-client.o: libmemuncached.o logger.h client.c
-	$(CC) $(CFLAGS) libmemuncached.c client.c -o client.o
-
-lib_demo.o: libmemuncached.o logger.h client.c
-	$(CC) $(CFLAGS) libmemuncached.c client.c -o client.o
+lib_demo.o: libmemuncached.o logger.h lib_demo.c
+	$(CC) $(CFLAGS) libmemuncached.c lib_demo.c -o lib_demo.o
 
 lib: libmemuncached.o ;
 
 lib_demo: lib_demo.o ;
-
-client: client.o ;
 
 
 # ========================================= MISCELLANEOUS ========================================
