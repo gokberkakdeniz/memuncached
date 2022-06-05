@@ -20,13 +20,13 @@ fnv.o: fnv.c fnv.h logger.h
 connection.o: connection.c connection.h logger.h
 	$(CC) $(CFLAGS) -c connection.c -o connection.o
 
-memuncached.o: vector.o connection.o fnv.o hash_table.o server.c logger.h
-	gcc $(CFLAGS) vector.o connection.o fnv.o hash_table.o server.c -o memuncached.o
+server.o: vector.o connection.o fnv.o hash_table.o server.c logger.h
+	gcc $(CFLAGS) vector.o connection.o fnv.o hash_table.o server.c -o server.o
 
 main.o: vector.o connection.o fnv.o hash_table.o main.c logger.h
 	gcc $(CFLAGS) vector.o connection.o fnv.o hash_table.o main.c -o main.o
 
-server: memuncached.o ;
+server: server.o ;
 
 # ============================================ CLIENT ============================================
 

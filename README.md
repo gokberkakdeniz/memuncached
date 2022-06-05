@@ -13,11 +13,13 @@ PANDOC_END-->
 # memuncached
 
 _memuncached_ is the worst undistributed memory object caching system.
-Its name and description are sarcasticly quoted from [_memcached_](https://memcached.org/) 
+Its name and description are sarcasticly quoted from [___memcached___](https://memcached.org/) 
 which is _free & open source, high-performance, distributed memory object caching system_.
 
 The _memory object caching system_ is a in-memory database for storing/caching heavy-to-compute values
 to speed up webservers, applications, APIs.
+
+Although I influenced from [___memcached___](https://memcached.org/), I did not implemented their protocol but I designed myself. The commands are selected and slightly changed from [___PHP memcached client documentation___](https://www.php.net/manual/en/class.memcached.php#chunklist_reference).
 
 The software consists of 3 parts: **server**, **client library**, **client cli**.
 
@@ -29,6 +31,11 @@ You can think it like _database client library_.
 It is written in GNU dialect of ISO C11, _gnu11_.
 
 The _server_ is written first while using _telnet_, so it is fully compatible with _telnet_. 
+
+The _server_ handles multiple clients simulataneously thanks to _multithreading_.
+
+Also, I published the full source code at ___[github.com/gokberkakdeniz/memuncached](https://github.com/gokberkakdeniz/memuncached)___.
+
 
 ## Instructions
 
@@ -42,7 +49,12 @@ Tested on `Fedora 35` using `gcc (GCC) 11.3.1 20220421 (Red Hat 11.3.1-2)`, `GNU
 ## Build
 
 - cd _project\_folder_
-- make _`# Available targets: server, lib, client`_
+- make
+  - Available targets: _all_, _server_, _lib_, _client_. Default target: _all_.
+
+## Usage
+
+- Run `./server.o` to start _server_.
 
 <!-- pandoc \newpage -->
 
@@ -50,12 +62,16 @@ Tested on `Fedora 35` using `gcc (GCC) 11.3.1 20220421 (Red Hat 11.3.1-2)`, `GNU
 
 - The protocol is ASCII based. 
 - The transmission is done with TCP.
-- The commands are case-insensitive.  
+- The commands are case-insensitive. 
+- There 3 types of data: **decimal (0)**, **real (1)**, **string (2)**.
+- If the command takes payload, its length must be sent.
 
 ## Request
 
-- ```{CMD} {...ARGS}\r\n```
-- ```{CMD} {...ARGS} {LENGTH}\r\n{PAYLOAD}\r\n```
+There are two types of request:
+
+- Without payload: ```{CMD} {...ARGS}\r\n```
+- With payload: ```{CMD} {...ARGS} {LENGTH}\r\n{PAYLOAD}\r\n```
 
 ### Examples
 
@@ -72,8 +88,10 @@ get mykey
 
 ### Format
 
-- ```{CODE} {DESCRIPTION}\r\n{LENGTH}\r\n{PAYLOAD}\0\r\n```
-- ```{CODE} {DESCRIPTION}\r\n{LENGTH} {TYPE}\r\n{PAYLOAD}\0\r\n```
+All responses are in the same format except one optional value, _TYPE_, which is required for **getter** (get, add) commands.
+
+
+- ```{CODE} {DESCRIPTION}\r\n{LENGTH} [TYPE]\r\n{PAYLOAD}\0\r\n```
 
 ### Examples
 
@@ -137,5 +155,6 @@ Invalid command.
 
 ### Others
 
-- Key validation
+- Key validation.
+- Authentication with username and password using [___crypt.h___](https://man7.org/linux/man-pages/man3/crypt.3.html).
 
