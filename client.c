@@ -28,6 +28,13 @@ int main(int argc, char const* argv[])
     } else {
         LOG_INFO("set_s_data false");
     }
+    char add_s_data[] = "hello world.";
+    if (memuncached_add_s(client, "text", (void*)&add_s_data, 12)) {
+        LOG_INFO("add_s_data true");
+    } else {
+        LOG_INFO("add_s_data false");
+    }
+
     memuncached_value_result_t res_get = {};
     if (memuncached_get(client, "real", &res_get)) {
         if (res_get.type == MEMCACHED_NUMBER_RESULT_DECIMAL) {

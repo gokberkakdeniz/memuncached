@@ -398,21 +398,6 @@ bool memuncached_get(memuncached_client_t* client, char* key, memuncached_value_
 {
     dprintf(client->fd, "GET %s\r\n", key);
 
-    // char buffer[100];
-    // int total_size = recv(client->fd, buffer, 100, 0);
-
-    // printf("===========BUFFER============\n");
-    // for (size_t i = 0; i < total_size; i++) {
-    //     printf("%d ", buffer[i]);
-    // }
-    // printf("\n");
-    // for (size_t i = 0; i < total_size; i++) {
-    //     printf("%c", buffer[i]);
-    // }
-    // printf("\n===========BUFFER============\n");
-
-    // return false;
-
     bool is_success = memuncached_recv(client);
     is_success = is_success && client->response.code == 200;
 
@@ -441,6 +426,28 @@ bool __memuncached_set(memuncached_client_t* client, char* key, char type, void*
         return false;
 
     dprintf(client->fd, "SET %s %d %d\r\n", key, type, length);
+
+    if (type == MEMCACHED_NUMBER_RESULT_DECIMAL) {
+        dprintf(client->fd, "%ld\r\n", *((int64_t*)data));
+    } else if (type == MEMCACHED_NUMBER_RESULT_REAL) {
+        dprintf(client->fd, "%lf\r\n", *((double*)data));
+    } else if (type == MEMCACHED_NUMBER_RESULT_STRING) {
+        write(client->fd, (char*)data, length);
+        write(client->fd, "\r\n", 2);
+    }
+
+    bool is_success = memuncached_recv(client);
+    is_success = is_success && client->response.code == 200;
+
+    return is_success;
+}
+
+bool __memuncached_add(memuncached_client_t* client, char* key, char type, void* data, int length)
+{
+    if (type < MEMCACHED_NUMBER_RESULT_DECIMAL || type > MEMCACHED_NUMBER_RESULT_STRING)
+        return false;
+
+    dprintf(client->fd, "ADD %s %d %d\r\n", key, type, length);
 
     if (type == MEMCACHED_NUMBER_RESULT_DECIMAL) {
         dprintf(client->fd, "%ld\r\n", *((int64_t*)data));

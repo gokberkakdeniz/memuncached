@@ -128,10 +128,33 @@ bool memuncached_del(memuncached_client_t* client, char* key, memuncached_value_
  */
 bool memuncached_get(memuncached_client_t* client, char* key, memuncached_value_result_t* result);
 
+/**
+ * @brief sets value identified by key
+ *
+ * @param client
+ * @param key
+ * @param data
+ * @param [length]
+ * @return bool
+ */
 bool __memuncached_set(memuncached_client_t* client, char* key, char type, void* data, int length);
 #define memuncached_set_d(client, key, data) __memuncached_set(client, key, MEMCACHED_NUMBER_RESULT_DECIMAL, data, snprintf(NULL, 0, "%ld", *((int64_t*)data)))
 #define memuncached_set_f(client, key, data) __memuncached_set(client, key, MEMCACHED_NUMBER_RESULT_REAL, data, snprintf(NULL, 0, "%lf", *((double*)data)))
 #define memuncached_set_s(client, key, data, length) __memuncached_set(client, key, MEMCACHED_NUMBER_RESULT_STRING, data, length)
+
+/**
+ * @brief sets value identified by key, if exist return false
+ *
+ * @param client
+ * @param key
+ * @param data
+ * @param [length]
+ * @return bool
+ */
+bool __memuncached_add(memuncached_client_t* client, char* key, char type, void* data, int length);
+#define memuncached_add_d(client, key, data) __memuncached_add(client, key, MEMCACHED_NUMBER_RESULT_DECIMAL, data, snprintf(NULL, 0, "%ld", *((int64_t*)data)))
+#define memuncached_add_f(client, key, data) __memuncached_add(client, key, MEMCACHED_NUMBER_RESULT_REAL, data, snprintf(NULL, 0, "%lf", *((double*)data)))
+#define memuncached_add_s(client, key, data, length) __memuncached_add(client, key, MEMCACHED_NUMBER_RESULT_STRING, data, length)
 
 /**
  * @brief disconnect
