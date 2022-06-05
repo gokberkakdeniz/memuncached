@@ -31,6 +31,7 @@ bool hash_table_set(hash_table_t* table, cache_value_key key, cache_value_type t
     if (table->table[index] == NULL) {
         table->table[index] = (cache_value_t*)malloc(sizeof(cache_value_t));
         table->table[index]->value = NULL;
+        table->count++;
     }
 
     table->table[index]->key = key;
@@ -120,6 +121,7 @@ bool hash_table_del(hash_table_t* table, cache_value_key key)
     free(value->value);
     free(value);
     table->table[index] = NULL;
+    table->count--;
 
     return true;
 }
