@@ -1,3 +1,4 @@
+<!--PANDOC_START
 ---
 pdf_document: null
 geometry: margin=1.5cm
@@ -7,6 +8,7 @@ subtitle:  CENG421 Project Report
 author: Gökberk Akdeniz - 250201041
 date: 10.06.2022
 ---
+PANDOC_END-->
 
 # memuncached
 
