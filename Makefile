@@ -44,6 +44,9 @@ client: client.o ;
 
 # ========================================= MISCELLANEOUS ========================================
 
+doc:
+	sed -E 's/<!-- pandoc (.*?) -->/\1/g; s/<br( )?(\/)?>/ \\newline /g; s/<(\/)?pre>//g' <README.md >README.pandoc.md
+	pandoc README.pandoc.md -o README.pdf
 
 clean:
-	rm *.o
+	rm *.o README.pandoc.md README.pandoc.pdf 2&> /dev/null || true

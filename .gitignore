@@ -1,3 +1,5 @@
 .history
 *.o
 vgcore*
+README.pandoc.md
+README.pdf

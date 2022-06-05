@@ -1,3 +1,9 @@
+---
+  pdf_document: null
+  geometry: margin=1.5cm
+  output: pdf_document
+---
+
 # memuncached
 
 _memuncached_ is the worst undistributed memory object caching system.
@@ -54,6 +60,10 @@ abcde
 ```
 get mykey
 ```
+
+<!-- pandoc \newpage -->
+
+
 ## Response
 
 ### Format
@@ -98,28 +108,30 @@ Invalid command.
 ## Commands
 
 
-| Command | Arguments                  | Example Responses                                             | Description                                                                                |
-| ------- | -------------------------- | ------------------------------------------------------------- | ------------------------------------------------------------------------------------------ |
-| ADD     | KEY TYPE LENGTH<br/>VALUE  | <pre>405 KEY EXIST<br/>0</pre>                                | Similar to SET but fails if key exists.                                                    |
-| BYE     | -                          | <pre>200 OK<br/>4<br/>bye.</pre>                              | Close connection.                                                                          |
-| DEC     | KEY [OFFSET=1] [INITIAL=1] | <pre>200 OK<br/>1 0<br/>1</pre>                               | Decrease the value of KEY by OFFSET. If the value is empty INITIAL value will be inserted. |
-| DEL     | KEY                        | <pre>200 OK<br/>5 2<br/>value</pre>                           | Deletes the value of the key and returns the value if exist.                               |
-| INC     | KEY [OFFSET=1] [INITIAL=1] | <pre>200 OK<br/>3 1<br/>3.5</pre>                             | Increase the value of KEY by OFFSET. If the value is empty INITIAL value will be inserted. |
-| GET     | KEY                        | <pre>200 OK<br/>4 2<br/>a b\nc</pre>                          | Get the value of the key.                                                                  |
-| SET     | KEY TYPE LENGTH<br/>VALUE  | <pre>200 OK<br/>0</pre>                                       | Set the value of the key.                                                                  |
-| STT     | -                          | <pre>200 OK<br/>28<br/>Client-Count: 1<br/>Key-Count: 0</pre> | Get total key count, client count etc...                                                   |
-| VER     | -                          | <pre>200 OK<br/>3<br/>1.0</pre>                               | Get server version.                                                                        |
+| Command&nbsp;&nbsp; | Arguments&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; | Example Responses                                             | Description                                                                                    |
+| ------------------- | --------------------------------------------------------------------------------- | ------------------------------------------------------------- | ---------------------------------------------------------------------------------------------- |
+| ADD                 | KEY TYPE LENGTH<br/>VALUE                                                         | <pre>405 KEY EXIST<br/>0</pre>                                | Similar to SET but fails if key exists.                                                        |
+| BYE                 | -                                                                                 | <pre>200 OK<br/>4<br/>bye.</pre>                              | Close connection.                                                                              |
+| DEC                 | KEY [OFFSET=1] [INITIAL=1]                                                        | <pre>200 OK<br/>1 0<br/>1</pre>                               | Decrease the value of KEY by OFFSET.<br/>If the value is empty INITIAL value will be inserted. |
+| DEL                 | KEY                                                                               | <pre>200 OK<br/>5 2<br/>value</pre>                           | Deletes the value of the key and returns the value if exist.                                   |
+| INC                 | KEY [OFFSET=1] [INITIAL=1]                                                        | <pre>200 OK<br/>3 1<br/>3.5</pre>                             | Increase the value of KEY by OFFSET.<br/>If the value is empty INITIAL value will be inserted. |
+| GET                 | KEY                                                                               | <pre>200 OK<br/>4 2<br/>a b\\nc</pre>                         | Get the value of the key.                                                                      |
+| SET                 | KEY TYPE LENGTH<br/>VALUE                                                         | <pre>200 OK<br/>0</pre>                                       | Set the value of the key.                                                                      |
+| STT                 | -                                                                                 | <pre>200 OK<br/>28<br/>Client-Count: 1<br/>Key-Count: 0</pre> | Get total key count, client count etc...                                                       |
+| VER                 | -                                                                                 | <pre>200 OK<br/>3<br/>1.0</pre>                               | Get server version.                                                                            |
 
+
+<!-- pandoc \newpage -->
 
 ## Future Work
 
 ### Commands
 
-| Command | Arguments            | Example Responses                          | Description                                        |
-| ------- | -------------------- | ------------------------------------------ | -------------------------------------------------- |
-| APP     | KEY LENGTH<br/>VALUE | <pre>200 OK<br/>0</pre>                    | Append the value to value identified by given key  |
-| PRE     | KEY LENGTH<br/>VALUE | <pre>200 OK<br/>0</pre>                    | Prepend the value to value identified by given key |
-| KYS     | -                    | <pre>200 OK<br/>10<br/>key1<br/>key2</pre> | Get all keys                                       |
+| Command&nbsp;&nbsp; | Arguments&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; | Example Responses                          | Description                                        |
+| ------------------- | --------------------------------------------------------------------------------- | ------------------------------------------ | -------------------------------------------------- |
+| APP                 | KEY LENGTH<br/>VALUE                                                              | <pre>200 OK<br/>0</pre>                    | Append the value to value identified by given key  |
+| PRE                 | KEY LENGTH<br/>VALUE                                                              | <pre>200 OK<br/>0</pre>                    | Prepend the value to value identified by given key |
+| KYS                 | -                                                                                 | <pre>200 OK<br/>10<br/>key1<br/>key2</pre> | Get all keys                                       |
 
 ### Others
 
