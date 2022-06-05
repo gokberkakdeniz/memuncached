@@ -258,20 +258,36 @@ bool memuncached_ver(memuncached_client_t* client, memuncached_ver_result_t* res
     return is_success;
 }
 
-bool __memuncached_inc(memuncached_client_t* client, char* key, memuncached_value_result_t* result, ...)
+bool __memuncached_inc(memuncached_client_t* client, char* key, char type, memuncached_value_result_t* result, ...)
 {
     va_list opt_args;
     va_start(opt_args, result);
 
-    int offset = va_arg(opt_args, int);
-    int initial = va_arg(opt_args, int);
+    if (type = 0) {
+        int offset = va_arg(opt_args, int);
+        int initial = va_arg(opt_args, int);
 
-    if (offset == LIBMEMUNCACHED_DEFAULT_INT) {
-        dprintf(client->fd, "INC %s\r\n", key);
-    } else if (initial == LIBMEMUNCACHED_DEFAULT_INT) {
-        dprintf(client->fd, "INC %s %d\r\n", key, offset);
+        if (offset == LIBMEMUNCACHED_DEFAULT_INT) {
+            dprintf(client->fd, "INC %s\r\n", key);
+        } else if (initial == LIBMEMUNCACHED_DEFAULT_INT) {
+            dprintf(client->fd, "INC %s %d\r\n", key, offset);
+        } else {
+            dprintf(client->fd, "INC %s %d %d\r\n", key, offset, initial);
+        }
+    } else if (type = 1) {
+        double offset = va_arg(opt_args, double);
+        double initial = va_arg(opt_args, double);
+
+        if (offset == LIBMEMUNCACHED_DEFAULT_DOUBLE) {
+            dprintf(client->fd, "INC %s\r\n", key);
+        } else if (initial == LIBMEMUNCACHED_DEFAULT_DOUBLE) {
+            dprintf(client->fd, "INC %s %lf\r\n", key, offset);
+        } else {
+            dprintf(client->fd, "INC %s %lf %lf\r\n", key, offset, initial);
+        }
     } else {
-        dprintf(client->fd, "INC %s %d %d\r\n", key, offset, initial);
+        va_end(opt_args);
+        return false;
     }
 
     va_end(opt_args);
@@ -297,20 +313,36 @@ bool __memuncached_inc(memuncached_client_t* client, char* key, memuncached_valu
     return is_success;
 }
 
-bool __memuncached_dec(memuncached_client_t* client, char* key, memuncached_value_result_t* result, ...)
+bool __memuncached_dec(memuncached_client_t* client, char* key, char type, memuncached_value_result_t* result, ...)
 {
     va_list opt_args;
     va_start(opt_args, result);
 
-    int offset = va_arg(opt_args, int);
-    int initial = va_arg(opt_args, int);
+    if (type == 0) {
+        int offset = va_arg(opt_args, int);
+        int initial = va_arg(opt_args, int);
 
-    if (offset == LIBMEMUNCACHED_DEFAULT_INT) {
-        dprintf(client->fd, "DEC %s\r\n", key);
-    } else if (initial == LIBMEMUNCACHED_DEFAULT_INT) {
-        dprintf(client->fd, "DEC %s %d\r\n", key, offset);
+        if (offset == LIBMEMUNCACHED_DEFAULT_INT) {
+            dprintf(client->fd, "DEC %s\r\n", key);
+        } else if (initial == LIBMEMUNCACHED_DEFAULT_INT) {
+            dprintf(client->fd, "DEC %s %d\r\n", key, offset);
+        } else {
+            dprintf(client->fd, "DEC %s %d %d\r\n", key, offset, initial);
+        }
+    } else if (type == 1) {
+        double offset = va_arg(opt_args, double);
+        double initial = va_arg(opt_args, double);
+
+        if (offset == LIBMEMUNCACHED_DEFAULT_DOUBLE) {
+            dprintf(client->fd, "DEC %s\r\n", key);
+        } else if (initial == LIBMEMUNCACHED_DEFAULT_DOUBLE) {
+            dprintf(client->fd, "DEC %s %lf\r\n", key, offset);
+        } else {
+            dprintf(client->fd, "DEC %s %lf %lf\r\n", key, offset, initial);
+        }
     } else {
-        dprintf(client->fd, "DEC %s %d %d\r\n", key, offset, initial);
+        va_end(opt_args);
+        return false;
     }
 
     va_end(opt_args);

@@ -320,7 +320,7 @@ void memuncached_dec(client_connection_t* client, char* key, char* offset, char*
         cache_value_decimal initial_d = initial == NULL ? 1 : atoll(initial);
         cache_value_real initial_r = initial == NULL ? 1 : atof(initial);
 
-        if (initial_d == initial_r) {
+        if (initial == NULL || (initial[0] != 0 && initial[1] != '.')) {
             hash_table_set(table, key, CACHE_VALUE_DECIMAL, (void*)&initial_d, 0);
         } else {
             hash_table_set(table, key, CACHE_VALUE_REAL, (void*)&initial_r, 0);
@@ -339,7 +339,7 @@ void memuncached_inc(client_connection_t* client, char* key, char* offset, char*
         cache_value_decimal initial_d = initial == NULL ? 1 : atoll(initial);
         cache_value_real initial_r = initial == NULL ? 1 : atof(initial);
 
-        if (initial_d == initial_r) {
+        if (initial == NULL || (initial[0] != 0 && initial[1] != '.')) {
             hash_table_set(table, key, CACHE_VALUE_DECIMAL, (void*)&initial_d, 0);
         } else {
             hash_table_set(table, key, CACHE_VALUE_REAL, (void*)&initial_r, 0);

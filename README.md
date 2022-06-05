@@ -41,7 +41,7 @@ Invalid command.
 - `200 OK`: 
 - `400 BAD REQUEST`: 
 - `404 NOT FOUND`:
-- `404 KEY EXIST`:
+- `405 KEY EXIST`:
 
 
 ## Commands
@@ -49,7 +49,7 @@ Invalid command.
 
 | Command | Arguments                  | Example Responses                                             | Description                                                                                |
 | ------- | -------------------------- | ------------------------------------------------------------- | ------------------------------------------------------------------------------------------ |
-| ADD     | KEY TYPE LENGTH<br/>VALUE  | <pre>404 KEY EXIST<br/>0</pre>                                | Similar to SET but fails if key exists.                                                    |
+| ADD     | KEY TYPE LENGTH<br/>VALUE  | <pre>405 KEY EXIST<br/>0</pre>                                | Similar to SET but fails if key exists.                                                    |
 | APP     | KEY LENGTH<br/>VALUE       | <pre></pre>                                                   |                                                                                            |
 | BYE     | -                          | <pre>200 OK<br/>4<br/>bye.</pre>                              | Close connection.                                                                          |
 | DEC     | KEY [OFFSET=1] [INITIAL=1] | <pre>200 OK<br/>1 0<br/>1</pre>                               | Decrease the value of KEY by OFFSET. If the value is empty INITIAL value will be inserted. |

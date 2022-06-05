@@ -6,6 +6,7 @@
 
 #include <arpa/inet.h>
 #include <fcntl.h>
+#include <float.h>
 #include <limits.h>
 #include <netinet/in.h>
 #include <stdarg.h>
@@ -18,6 +19,7 @@
 #include <unistd.h>
 
 #define LIBMEMUNCACHED_DEFAULT_INT INT_MIN
+#define LIBMEMUNCACHED_DEFAULT_DOUBLE DBL_MIN
 #define LIBMEMUNCACHED_RECV_LENGTH 1000
 
 typedef struct memuncached_client {
@@ -86,11 +88,13 @@ bool memuncached_value_result_clean(memuncached_value_result_t* result);
  *
  * @param client
  * @param key
+ * @param type
  * @param [offset]
  * @param [initial]
  */
-bool __memuncached_inc(memuncached_client_t* client, char* key, memuncached_value_result_t* result, ...);
-#define memuncached_inc(client, key, result, ...) __memuncached_inc(client, key, result, ##__VA_ARGS__, LIBMEMUNCACHED_DEFAULT_INT, LIBMEMUNCACHED_DEFAULT_INT)
+bool __memuncached_inc(memuncached_client_t* client, char* key, char type, memuncached_value_result_t* result, ...);
+#define memuncached_inc_d(client, key, result, ...) __memuncached_inc(client, key, 0, result, ##__VA_ARGS__, LIBMEMUNCACHED_DEFAULT_INT, LIBMEMUNCACHED_DEFAULT_INT)
+#define memuncached_inc_f(client, key, result, ...) __memuncached_inc(client, key, 1, result, ##__VA_ARGS__, LIBMEMUNCACHED_DEFAULT_DOUBLE, LIBMEMUNCACHED_DEFAULT_DOUBLE)
 
 /**
  * @brief decrement value
@@ -100,8 +104,9 @@ bool __memuncached_inc(memuncached_client_t* client, char* key, memuncached_valu
  * @param [offset]
  * @param [initial]
  */
-bool __memuncached_dec(memuncached_client_t* client, char* key, memuncached_value_result_t* result, ...);
-#define memuncached_dec(client, key, result, ...) __memuncached_dec(client, key, result, ##__VA_ARGS__, LIBMEMUNCACHED_DEFAULT_INT, LIBMEMUNCACHED_DEFAULT_INT)
+bool __memuncached_dec(memuncached_client_t* client, char* key, char type, memuncached_value_result_t* result, ...);
+#define memuncached_dec_d(client, key, result, ...) __memuncached_dec(client, key, 0, result, ##__VA_ARGS__, LIBMEMUNCACHED_DEFAULT_INT, LIBMEMUNCACHED_DEFAULT_INT)
+#define memuncached_dec_f(client, key, result, ...) __memuncached_dec(client, key, 1, result, ##__VA_ARGS__, LIBMEMUNCACHED_DEFAULT_DOUBLE, LIBMEMUNCACHED_DEFAULT_DOUBLE)
 
 /**
  * @brief deletes value identified by key

@@ -44,6 +44,23 @@ int main(int argc, char const* argv[])
     } else {
         LOG_INFO("get false");
     }
+    if (memuncached_get(client, "x", &res_get)) {
+        if (res_get.type == MEMCACHED_NUMBER_RESULT_DECIMAL) {
+            LOG_INFO("get.decimal: %d", res_get.decimal);
+        } else if (res_get.type == MEMCACHED_NUMBER_RESULT_REAL) {
+            LOG_INFO("get.real: %f", res_get.real);
+        } else if (res_get.type == MEMCACHED_NUMBER_RESULT_STRING) {
+            LOG_INFO("get.string:<<<");
+            for (size_t i = 0; i < res_get.size; i++) {
+                printf("%c", res_get.string[i]);
+            }
+            printf("\n");
+            LOG_INFO("get.string:>>>");
+        }
+        memuncached_value_result_clean(&res_get);
+    } else {
+        LOG_INFO("get false");
+    }
 
     memuncached_stt_result_t res_stt = {};
     if (memuncached_stt(client, &res_stt)) {
@@ -57,7 +74,7 @@ int main(int argc, char const* argv[])
     }
 
     memuncached_value_result_t res_inc = {};
-    if (memuncached_inc(client, "x", &res_inc)) {
+    if (memuncached_inc_f(client, "x", &res_inc)) {
         if (res_inc.type == MEMCACHED_NUMBER_RESULT_DECIMAL) {
             LOG_INFO("inc.decimal: %d", res_inc.decimal);
         } else if (res_inc.type == MEMCACHED_NUMBER_RESULT_REAL) {
@@ -66,7 +83,7 @@ int main(int argc, char const* argv[])
     }
 
     memuncached_value_result_t res_dec = {};
-    if (memuncached_dec(client, "x", &res_dec)) {
+    if (memuncached_dec_d(client, "x", &res_dec)) {
         if (res_dec.type == MEMCACHED_NUMBER_RESULT_DECIMAL) {
             LOG_INFO("dec.decimal: %d", res_dec.decimal);
         } else if (res_dec.type == MEMCACHED_NUMBER_RESULT_REAL) {
@@ -74,7 +91,7 @@ int main(int argc, char const* argv[])
         }
     }
 
-    if (memuncached_dec(client, "x", &res_dec, 10)) {
+    if (memuncached_dec_d(client, "x", &res_dec, 10)) {
         if (res_dec.type == MEMCACHED_NUMBER_RESULT_DECIMAL) {
             LOG_INFO("dec.decimal: %d", res_dec.decimal);
         } else if (res_dec.type == MEMCACHED_NUMBER_RESULT_REAL) {
@@ -98,7 +115,7 @@ int main(int argc, char const* argv[])
         memuncached_value_result_clean(&res_del);
     }
 
-    if (memuncached_dec(client, "x", &res_dec, 10, 19)) {
+    if (memuncached_dec_d(client, "x", &res_dec, 10, 19)) {
         if (res_dec.type == MEMCACHED_NUMBER_RESULT_DECIMAL) {
             LOG_INFO("dec.decimal: %d", res_dec.decimal);
         } else if (res_dec.type == MEMCACHED_NUMBER_RESULT_REAL) {
