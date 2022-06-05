@@ -87,7 +87,7 @@ Tested on `Fedora 35` using `gcc (GCC) 11.3.1 20220421 (Red Hat 11.3.1-2)`, `GNU
 
 - cd _project\_folder_
 - make
-  - Available targets: _all_, _server_, _lib\_demo_, _client_. Default target: _all_.
+  - Available targets: _all_, _server_, _lib_, _lib\_demo_. Default target: _all_.
 
 ## Usage
 
@@ -163,10 +163,11 @@ Invalid command.
 
 ## Responses
 
-- `200 OK`: 
-- `400 BAD REQUEST`: 
-- `404 NOT FOUND`:
-- `405 KEY EXIST`:
+- `200 OK`
+- `400 BAD REQUEST`
+- `404 NOT FOUND`
+- `409 KEY EXIST`
+- `500 SERVER ERROR`
 
 <!-- pandoc \newpage -->
 
@@ -175,7 +176,7 @@ Invalid command.
 
 | Command&nbsp;&nbsp; | Arguments&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; | Example Responses                                             | Description                                                                                    |
 | ------------------- | --------------------------------------------------------------------------------- | ------------------------------------------------------------- | ---------------------------------------------------------------------------------------------- |
-| ADD                 | KEY TYPE LENGTH<br/>VALUE                                                         | <pre>405 KEY EXIST<br/>0</pre>                                | Similar to SET but fails if key exists.                                                        |
+| ADD                 | KEY TYPE LENGTH<br/>VALUE                                                         | <pre>409 KEY EXIST<br/>0</pre>                                | Similar to SET but fails if key exists.                                                        |
 | BYE                 | -                                                                                 | <pre>200 OK<br/>4<br/>bye.</pre>                              | Close connection.                                                                              |
 | DEC                 | KEY [OFFSET=1] [INITIAL=1]                                                        | <pre>200 OK<br/>1 0<br/>1</pre>                               | Decrease the value of KEY by OFFSET.<br/>If the value is empty INITIAL value will be inserted. |
 | DEL                 | KEY                                                                               | <pre>200 OK<br/>5 2<br/>value</pre>                           | Deletes the value of the key and returns the value if exist.                                   |
