@@ -50,11 +50,14 @@ Tested on `Fedora 35` using `gcc (GCC) 11.3.1 20220421 (Red Hat 11.3.1-2)`, `GNU
 
 - cd _project\_folder_
 - make
-  - Available targets: _all_, _server_, _lib_, _client_. Default target: _all_.
+  - Available targets: _all_, _server_, _lib\_demo_, _client_. Default target: _all_.
 
 ## Usage
 
 - Run `./server.o` to start _server_.
+- Run `./lib_demo.o` to start _libmemuncached demo application_ which connects server and executes a few commands.
+- Run `telnet localhost 9999` to connect the server via telnet.
+
 
 <!-- pandoc \newpage -->
 
@@ -157,4 +160,13 @@ Invalid command.
 
 - Key validation.
 - Authentication with username and password using [___crypt.h___](https://man7.org/linux/man-pages/man3/crypt.3.html).
+- Unit tests.
+- Better error handling and reporting for client library (instead of returning bool, return error codes).
 
+<!-- pandoc \newpage -->
+
+## Screenshots
+
+![__libmemcached__ client library demo](./screenshots/libmemcached_screenshot.png)
+
+![__telnet__ demo](./screenshots/telnet_screenshot.png)
