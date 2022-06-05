@@ -1,6 +1,3 @@
-#define LOG_LEVEL LOG_LEVEL_TRACE
-
-#include "auth.h"
 #include "connection.h"
 #include "defs.h"
 #include "hash_table.h"
