@@ -44,7 +44,7 @@ lib_demo: lib_demo.o ;
 # ========================================= MISCELLANEOUS ========================================
 
 doc:
-	sed -E 's/<!--PANDOC_START//g; s/PANDOC_END-->//g; s/<!-- pandoc (.*?) -->/\1/g; s/<br( )?(\/)?>/ \\newline /g; s/<(\/)?pre>//g' <README.md > README.pandoc.md
+	sed -E 's/<!--PANDOC//g; s/PANDOC-->//g; s/<!-- pandoc (.*?) -->/\1/g; s/<br( )?(\/)?>/ \\newline /g; s/<(\/)?pre>//g' <README.md > README.pandoc.md
 	pandoc README.pandoc.md -o README.pdf
 
 clean:

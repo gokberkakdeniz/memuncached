@@ -1,4 +1,4 @@
-<!--PANDOC_START
+<!--PANDOC
 ---
 pdf_document: null
 geometry: margin=1.5cm
@@ -8,7 +8,7 @@ subtitle:  CENG421 Project Report
 author: Gökberk Akdeniz - 250201041
 date: 10.06.2022
 ---
-PANDOC_END-->
+PANDOC-->
 
 # memuncached
 
@@ -43,34 +43,33 @@ The _server_ handles multiple clients simulataneously thanks to _multithreading_
 Also, I published the full source code at 
 ___[github.com/gokberkakdeniz/memuncached](https://github.com/gokberkakdeniz/memuncached)___.
 
-## adasd
+## Files and Descriptions
 
-asd
+
+- `connection.c, connection.h`: Handles connection. Reads, write, and parses.
+- `defs.h`: Global definitions.
+- `fnv.c, fnv.h`: Very basic hash function.
+- `hash_table.c, hash_table.h`: Thread-safe hash table.
+- `lib_demo.c`: libmemuncached demo application.
+- `libmemuncached.c, libmemuncached.h`: Client library.
+- `logger.h`: Logging macros.
+- `Makefile`: To build using make.
+- `server.c`: Server main file.
+- `utils.h`: Utility functions:
+- `vector.c, vector.h`: Thread-safe dynamic array.
 
 ## Statistics
 
 The whole project consist of 2.35K~ LoC and 50~ commits since 1st of May 2022.
 
-```
-# gokberk @ akdeniz in ~/Desktop/IYTE/memuncached on git:master x [19:01:32] 
-$ cat *.c | wc -l      
-1552
-
-# gokberk @ akdeniz in ~/Desktop/IYTE/memuncached on git:master x [19:06:50] 
-$ cat *.c *.h Makefile *.sh | wc -l
-2347
-```
-
 <!-- pandoc \newpage -->
 
 ## Screenshots
 
-![__libmemcached__ client library demo](./screenshots/libmemcached_screenshot.png)
+![__libmemuncached__ client library demo](./screenshots/libmemcached_screenshot.png)<!--PANDOC{ height=300px }PANDOC-->
 
-<!-- pandoc \newpage -->
+![two __telnet__ clients demo (numbers respresents execution order)](./screenshots/telnet_screenshot.png)<!--PANDOC{ height=368px }PANDOC-->
 
-
-![two __telnet__ clients demo (numbers respresents execution order)](./screenshots/telnet_screenshot.png)
 
 <!-- pandoc \newpage -->
 
@@ -209,4 +208,5 @@ using [___crypt.h___](https://man7.org/linux/man-pages/man3/crypt.3.html).
 
 I learnt various topics including network protocol design, concurrency models, 
 POSIX threads, Linux sockets, client/server model, logging, Makefiles. 
-I believe that this project made me better programmer.
+I believe that this project made me better programmer since I have never 
+involved in development of system programming.
