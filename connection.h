@@ -91,7 +91,7 @@ typedef struct client_connection {
 
 void* handle_connection(void* arg);
 
-void handle_command(const char* command, client_connection_t* client);
+void handle_command(const char* command, int command_len, int payload_chunk_size, client_connection_t* client);
 
 void memuncached_bye(client_connection_t* client);
 
@@ -107,8 +107,8 @@ void memuncached_del(client_connection_t* client, char* key);
 
 void memuncached_get(client_connection_t* client, char* key);
 
-void memuncached_set(client_connection_t* client, char* key, char* type, char* length);
+void memuncached_set(client_connection_t* client, char* key, char* type, char* length, char* payload_chunk, int payload_chunk_size);
 
-void memuncached_add(client_connection_t* client, char* key, char* type, char* length);
+void memuncached_add(client_connection_t* client, char* key, char* type, char* length, , char* payload_chunk, int payload_chunk_size);
 
 #endif

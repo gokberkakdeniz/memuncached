@@ -24,12 +24,13 @@ void* handle_connection(void* arg)
     char* command = NULL;
     size_t command_len = 0;
     ssize_t command_free_len = 0;
+    int payload_chunk_size = 0;
 
     write(client->socket_fd, CLIENT_WELCOME_MESSAGE, CLIENT_WELCOME_MESSAGE_LEN);
 
     while (is_running && client->is_thread_running) {
         is_end = false;
-        command_len = CONNECTION_RECV_LENGTH + 1;
+        command_len = CONNECTION_RECV_LENGTH;
         command_free_len = command_len;
         command = (char*)calloc(command_len, sizeof(char));
 
@@ -43,12 +44,17 @@ void* handle_connection(void* arg)
                 goto clean_and_stop;
             }
 
-            buffer[read_size] = '\0';
-            is_end = buffer[read_size - 1] == '\n';
+            char* end = sstrstr(buffer, "\n", read_size);
+            is_end = end != NULL;
+            if (is_end) {
+                payload_chunk_size = read_size - (end + 1 - buffer);
+            }
 
-            command_free_len = command_free_len - (read_size + 1);
-            if (command_free_len < 0) {
-                command_free_len = command_len - (read_size + 1);
+            LOG_DEBUG("1. command_len: %d ,, command_free_len: %d ,, read_size: %d", command_len, command_free_len, read_size);
+
+            command_free_len = command_free_len - read_size;
+            if (command_free_len <= 0) {
+                command_free_len += command_len;
                 command_len *= 2;
                 char* command_new = (char*)realloc(command, command_len);
 
@@ -61,7 +67,21 @@ void* handle_connection(void* arg)
                 }
             }
 
-            strcat(command, buffer);
+            // printf("===========buffer============\n");
+            // for (size_t i = 0; i < read_size; i++) {
+            //     printf("%d ", buffer[i]);
+            // }
+            // printf("\n");
+            // for (size_t i = 0; i < read_size; i++) {
+            //     printf("%c", buffer[i]);
+            // }
+            // printf("\n===========buffer============\n");
+
+            LOG_DEBUG("INCNNCNC %d", command_len - command_free_len - read_size);
+
+            memcpy(command + command_len - command_free_len - read_size, buffer, read_size);
+
+            LOG_DEBUG("2. command_len: %d ,, command_free_len: %d ,, read_size: %d", command_len, command_free_len, read_size);
 
             memset(buffer, 0, buffer_size);
         }
@@ -70,12 +90,23 @@ void* handle_connection(void* arg)
             goto clean_and_continue;
         }
 
-        command_len = strlen(command);
-        while (command[command_len - 1] == '\r' || command[command_len - 1] == '\n') {
-            command[--command_len] = 0;
+        command_len = command_len - command_free_len;
+        int i = command_len;
+        while (command[i - 1] == '\r' || command[i - 1] == '\n') {
+            command[--i] = 0;
         }
 
-        handle_command(command, client);
+        // printf("===========command============\n");
+        // for (size_t i = 0; i < command_len; i++) {
+        //     printf("%d ", command[i]);
+        // }
+        // printf("\n");
+        // for (size_t i = 0; i < command_len; i++) {
+        //     printf("%c", command[i]);
+        // }
+        // printf("\n===========command============\n");
+
+        handle_command(command, command_len, payload_chunk_size, client);
 
     clean_and_continue:
         free(command);
@@ -119,7 +150,7 @@ char* put_null_terminator_unknown_size(char* itr)
     return itr;
 }
 
-void handle_command(const char* command, client_connection_t* client)
+void handle_command(const char* command, int command_len, int payload_chunk_size, client_connection_t* client)
 {
     char* command_escaped = str_escape(command);
     LOG_INFO(LOG_CLIENT_FORMAT "Query received: '%s'", LOG_CLIENT_FORMAT_ARGS, command_escaped);
@@ -164,7 +195,7 @@ void handle_command(const char* command, client_connection_t* client)
             HANDLE_COMMAND_DONE;
         }
 
-        memuncached_add(client, key, type, length);
+        memuncached_add(client, key, type, length, itr, payload_chunk_size);
     } else if (strcasecmp(cmd, "BYE") == 0) {
         if (*itr != 0) {
             REPLY_BAD_REQUEST(client->socket_fd, "BYE", "The command does not take arguments.", command_escaped);
@@ -272,7 +303,7 @@ void handle_command(const char* command, client_connection_t* client)
             HANDLE_COMMAND_DONE;
         }
 
-        memuncached_set(client, key, type, length);
+        memuncached_set(client, key, type, length, itr, payload_chunk_size);
     } else if (strcasecmp(cmd, "STT") == 0) {
         if (*itr != 0) {
             REPLY_BAD_REQUEST(client->socket_fd, "STT", "The command does not take arguments.", command_escaped);
@@ -392,7 +423,7 @@ void memuncached_get(client_connection_t* client, char* key)
     }
 }
 
-void memuncached_set(client_connection_t* client, char* key, char* type, char* length)
+void memuncached_set(client_connection_t* client, char* key, char* type, char* length, char* payload_chunk, int payload_chunk_size)
 {
     int v_length = atol(length);
     char* payload = (char*)calloc(v_length + 2, sizeof(char));
@@ -401,7 +432,12 @@ void memuncached_set(client_connection_t* client, char* key, char* type, char* l
         REPLY_SERVER_ERROR(client->socket_fd, "Calloc failed.");
     }
 
-    int v_len = v_length + 2;
+    if (payload_chunk != NULL && payload_chunk_size > 0) {
+        memcpy(payload, payload_chunk, payload_chunk_size);
+    }
+    LOG_DEBUG("payload_chunk_size: %d", payload_chunk_size);
+
+    int v_len = v_length + 2 - payload_chunk_size;
     while (v_len > 0) {
         LOG_DEBUG("v_len: %d", v_len);
         int read_size = recv(client->socket_fd, payload + v_length + 2 - v_len, v_len, 0);
@@ -438,11 +474,12 @@ clean_and_stop:
     free(payload);
 }
 
-void memuncached_add(client_connection_t* client, char* key, char* type, char* length)
+void memuncached_add(client_connection_t* client, char* key, char* type, char* length, char* payload_chunk, int payload_chunk_size)
 {
     if (hash_table_get(table, key) != NULL) {
         REPLY_KEY_EXISTS(client->socket_fd);
     } else {
-        memuncached_set(client, key, type, length);
+        // TODO: HANDLE NULL 0
+        memuncached_set(client, key, type, length, payload_chunk, payload_chunk_size);
     }
 }

@@ -10,24 +10,59 @@ int main(int argc, char const* argv[])
         return 1;
     }
 
+    double set_f_data = 5.999874545;
+    if (memuncached_set_f(client, "real", (void*)&set_f_data)) {
+        LOG_INFO("set_f_data true");
+    } else {
+        LOG_INFO("set_f_data false");
+    }
+    int64_t set_d_data = -123456;
+    if (memuncached_set_d(client, "deci", (void*)&set_d_data)) {
+        LOG_INFO("set_d_data true");
+    } else {
+        LOG_INFO("set_d_data false");
+    }
+    char set_s_data[] = "Lorem ipsum sit amet dolor.";
+    if (memuncached_set_s(client, "text", (void*)&set_s_data, 27)) {
+        LOG_INFO("set_s_data true");
+    } else {
+        LOG_INFO("set_s_data false");
+    }
     memuncached_value_result_t res_get = {};
     if (memuncached_get(client, "real", &res_get)) {
         if (res_get.type == MEMCACHED_NUMBER_RESULT_DECIMAL) {
-            LOG_INFO("get.decimal: %d", res_get.decimal);
+            LOG_INFO("get(real).decimal: %d", res_get.decimal);
         } else if (res_get.type == MEMCACHED_NUMBER_RESULT_REAL) {
-            LOG_INFO("get.real: %f", res_get.real);
+            LOG_INFO("get(real).real: %f", res_get.real);
         } else if (res_get.type == MEMCACHED_NUMBER_RESULT_STRING) {
-            LOG_INFO("get.string:<<<");
+            LOG_INFO("get(real).string:<<<");
             for (size_t i = 0; i < res_get.size; i++) {
                 printf("%c", res_get.string[i]);
             }
-            LOG_INFO("get.string:>>>");
+            LOG_INFO("get(real).string:>>>");
         }
         memuncached_value_result_clean(&res_get);
     } else {
-        LOG_INFO("get false");
+        LOG_INFO("get real false");
     }
     if (memuncached_get(client, "text", &res_get)) {
+        if (res_get.type == MEMCACHED_NUMBER_RESULT_DECIMAL) {
+            LOG_INFO("get(text).decimal: %d", res_get.decimal);
+        } else if (res_get.type == MEMCACHED_NUMBER_RESULT_REAL) {
+            LOG_INFO("get(text).real: %f", res_get.real);
+        } else if (res_get.type == MEMCACHED_NUMBER_RESULT_STRING) {
+            LOG_INFO("get(text).string:<<<");
+            for (size_t i = 0; i < res_get.size; i++) {
+                printf("%c", res_get.string[i]);
+            }
+            printf("\n");
+            LOG_INFO("get(text).string:>>>");
+        }
+        memuncached_value_result_clean(&res_get);
+    } else {
+        LOG_INFO("get text false");
+    }
+    if (memuncached_get(client, "deci", &res_get)) {
         if (res_get.type == MEMCACHED_NUMBER_RESULT_DECIMAL) {
             LOG_INFO("get.decimal: %d", res_get.decimal);
         } else if (res_get.type == MEMCACHED_NUMBER_RESULT_REAL) {

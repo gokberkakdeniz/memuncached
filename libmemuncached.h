@@ -93,8 +93,8 @@ bool memuncached_value_result_clean(memuncached_value_result_t* result);
  * @param [initial]
  */
 bool __memuncached_inc(memuncached_client_t* client, char* key, char type, memuncached_value_result_t* result, ...);
-#define memuncached_inc_d(client, key, result, ...) __memuncached_inc(client, key, 0, result, ##__VA_ARGS__, LIBMEMUNCACHED_DEFAULT_INT, LIBMEMUNCACHED_DEFAULT_INT)
-#define memuncached_inc_f(client, key, result, ...) __memuncached_inc(client, key, 1, result, ##__VA_ARGS__, LIBMEMUNCACHED_DEFAULT_DOUBLE, LIBMEMUNCACHED_DEFAULT_DOUBLE)
+#define memuncached_inc_d(client, key, result, ...) __memuncached_inc(client, key, MEMCACHED_NUMBER_RESULT_DECIMAL, result, ##__VA_ARGS__, LIBMEMUNCACHED_DEFAULT_INT, LIBMEMUNCACHED_DEFAULT_INT)
+#define memuncached_inc_f(client, key, result, ...) __memuncached_inc(client, key, MEMCACHED_NUMBER_RESULT_REAL, result, ##__VA_ARGS__, LIBMEMUNCACHED_DEFAULT_DOUBLE, LIBMEMUNCACHED_DEFAULT_DOUBLE)
 
 /**
  * @brief decrement value
@@ -105,8 +105,8 @@ bool __memuncached_inc(memuncached_client_t* client, char* key, char type, memun
  * @param [initial]
  */
 bool __memuncached_dec(memuncached_client_t* client, char* key, char type, memuncached_value_result_t* result, ...);
-#define memuncached_dec_d(client, key, result, ...) __memuncached_dec(client, key, 0, result, ##__VA_ARGS__, LIBMEMUNCACHED_DEFAULT_INT, LIBMEMUNCACHED_DEFAULT_INT)
-#define memuncached_dec_f(client, key, result, ...) __memuncached_dec(client, key, 1, result, ##__VA_ARGS__, LIBMEMUNCACHED_DEFAULT_DOUBLE, LIBMEMUNCACHED_DEFAULT_DOUBLE)
+#define memuncached_dec_d(client, key, result, ...) __memuncached_dec(client, key, MEMCACHED_NUMBER_RESULT_DECIMAL, result, ##__VA_ARGS__, LIBMEMUNCACHED_DEFAULT_INT, LIBMEMUNCACHED_DEFAULT_INT)
+#define memuncached_dec_f(client, key, result, ...) __memuncached_dec(client, key, MEMCACHED_NUMBER_RESULT_REAL, result, ##__VA_ARGS__, LIBMEMUNCACHED_DEFAULT_DOUBLE, LIBMEMUNCACHED_DEFAULT_DOUBLE)
 
 /**
  * @brief deletes value identified by key
@@ -127,6 +127,11 @@ bool memuncached_del(memuncached_client_t* client, char* key, memuncached_value_
  * @return bool
  */
 bool memuncached_get(memuncached_client_t* client, char* key, memuncached_value_result_t* result);
+
+bool __memuncached_set(memuncached_client_t* client, char* key, char type, void* data, int length);
+#define memuncached_set_d(client, key, data) __memuncached_set(client, key, MEMCACHED_NUMBER_RESULT_DECIMAL, data, snprintf(NULL, 0, "%ld", *((int64_t*)data)))
+#define memuncached_set_f(client, key, data) __memuncached_set(client, key, MEMCACHED_NUMBER_RESULT_REAL, data, snprintf(NULL, 0, "%lf", *((double*)data)))
+#define memuncached_set_s(client, key, data, length) __memuncached_set(client, key, MEMCACHED_NUMBER_RESULT_STRING, data, length)
 
 /**
  * @brief disconnect

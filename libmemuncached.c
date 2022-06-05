@@ -435,6 +435,28 @@ bool memuncached_get(memuncached_client_t* client, char* key, memuncached_value_
     return is_success;
 }
 
+bool __memuncached_set(memuncached_client_t* client, char* key, char type, void* data, int length)
+{
+    if (type < MEMCACHED_NUMBER_RESULT_DECIMAL || type > MEMCACHED_NUMBER_RESULT_STRING)
+        return false;
+
+    dprintf(client->fd, "SET %s %d %d\r\n", key, type, length);
+
+    if (type == MEMCACHED_NUMBER_RESULT_DECIMAL) {
+        dprintf(client->fd, "%ld\r\n", *((int64_t*)data));
+    } else if (type == MEMCACHED_NUMBER_RESULT_REAL) {
+        dprintf(client->fd, "%lf\r\n", *((double*)data));
+    } else if (type == MEMCACHED_NUMBER_RESULT_STRING) {
+        write(client->fd, (char*)data, length);
+        write(client->fd, "\r\n", 2);
+    }
+
+    bool is_success = memuncached_recv(client);
+    is_success = is_success && client->response.code == 200;
+
+    return is_success;
+}
+
 bool memuncached_disconnect(memuncached_client_t* client)
 {
     dprintf(client->fd, "BYE\r\n");

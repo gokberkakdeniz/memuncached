@@ -5,25 +5,25 @@ all: server lib client
 
 # ============================================ SERVER ============================================
 
-vector.o: vector.c vector.h
+vector.o: vector.c vector.h logger.h
 	$(CC) $(CFLAGS) -c vector.c -o vector.o
 
-utils.o: utils.h
+utils.o: utils.h logger.h
 	$(CC) $(CFLAGS) -c utils.h -o utils.o
 
-hash_table.o: hash_table.c hash_table.h
+hash_table.o: hash_table.c hash_table.h logger.h
 	$(CC) $(CFLAGS) -c hash_table.c -o hash_table.o
 
-fnv.o: fnv.c fnv.h
+fnv.o: fnv.c fnv.h logger.h
 	$(CC) $(CFLAGS) -c fnv.c -o fnv.o
 
-connection.o: connection.c connection.h
+connection.o: connection.c connection.h logger.h
 	$(CC) $(CFLAGS) -c connection.c -o connection.o
 
-memuncached.o: vector.o connection.o fnv.o hash_table.o server.c
+memuncached.o: vector.o connection.o fnv.o hash_table.o server.c logger.h
 	gcc $(CFLAGS) vector.o connection.o fnv.o hash_table.o server.c -o memuncached.o
 
-main.o: vector.o connection.o fnv.o hash_table.o main.c
+main.o: vector.o connection.o fnv.o hash_table.o main.c logger.h
 	gcc $(CFLAGS) vector.o connection.o fnv.o hash_table.o main.c -o main.o
 
 server: memuncached.o ;
